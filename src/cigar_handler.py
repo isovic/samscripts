@@ -418,7 +418,10 @@ def ProcessSAM(references, sam_path, accuracy_counts_path, count_indels_as_event
 	fp_accuracy_counts = None;
 
 	try:
-		fp_sam = open(sam_path, 'r');
+                if sam_path == "-":
+                        fp_sam = sys.stdin
+                else:
+                        fp_sam = open(sam_path, 'r');
 	except IOError:
 		sys.stderr.write('ERROR: Could not open file "%s" for reading!\n' % sam_path);
 		exit(1);
@@ -427,7 +430,8 @@ def ProcessSAM(references, sam_path, accuracy_counts_path, count_indels_as_event
 		fp_accuracy_counts = open(accuracy_counts_path, 'w');
 	except IOError:
 		sys.stderr.write('ERROR: Could not open file "%s" for writing!\n' % accuracy_counts_path);
-		fp_sam.close();
+                if fp_sam != sys.stdin:
+                        fp_sam.close();
 		exit(1);
 		
 	for line in fp_sam:
@@ -453,7 +457,8 @@ def ProcessSAM(references, sam_path, accuracy_counts_path, count_indels_as_event
 	sys.stderr.write('\n');
 	sys.stderr.flush();
 
-	fp_sam.close();
+        if fp_sam != sys.stdin:
+                fp_sam.close();
 	fp_accuracy_counts.close();
 
 def ProcessFromFiles(reference_file, sam_path, out_accuracy_counts_path, count_indels_as_events=False):
