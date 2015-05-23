@@ -15,7 +15,7 @@ except:
 	USE_MATPLOTLIB = False;
 
 HIGH_DPI_PLOT = False;
-HIGH_DPI_PLOT = True;
+# HIGH_DPI_PLOT = True;
 
 # CIGAR_OPERATIONS = ['M', 'I', 'D', '='];
 CIGAR_OPERATIONS_ALL = ['M', 'I', 'D', 'N', 'S', 'H', 'P', '=', 'X'];
@@ -210,14 +210,15 @@ def PlotErrorRates(error_rate_hist, insertion_hist, deletion_hist, snp_hist, mat
 	
 	
 	xvalues = range(0, 101);
-	ax1.plot(xvalues_error_rate, y_error_rate_hist, label='Total error rate');
-	ax1.plot(xvalues_insertion, y_insertion_hist, label='Insertion rate');
-	ax1.plot(xvalues_deletion, y_deletion_hist, label='Deletion rate');
-	ax1.plot(xvalues_snp, y_snp_hist, label='Mismatch rate');
-	ax1.plot(xvalues_match_rate, y_match_hist, 'k--', label='Match rate');
+	ax1.plot(xvalues_insertion, y_insertion_hist, label='Insertions (I)', linewidth=2);
+	ax1.plot(xvalues_deletion, y_deletion_hist, label='Deletions (D)', linewidth=2);
+	ax1.plot(xvalues_snp, y_snp_hist, label='Mismatches (M)', linewidth=2);
+	ax1.plot(xvalues_error_rate, y_error_rate_hist, label='I + D + M', linewidth=2);
+	ax1.plot(xvalues_match_rate, y_match_hist, 'k--', label='Matches', linewidth=2);
 	
 	fontP = FontProperties()
-	fontP.set_size('small')
+	# fontP.set_size('small')
+	fontP.set_size(14)
 	ax1.grid();
 	ax1.legend(prop=fontP, loc='upper right');
 
@@ -235,11 +236,11 @@ def PlotErrorRates(error_rate_hist, insertion_hist, deletion_hist, snp_hist, mat
 	# ax1.set_title(title_string);
 	
 	ax1.set_xlabel('Error rate [%]');
-	ax1.set_ylabel('Number of alignments');
+	ax1.set_ylabel('Alignments [%]');
 
 	font = {'family' : 'sans-serif',
 		'weight' : 'normal',
-		'size'   : 10}
+		'size'   : 18}
 	plt.rc('font', **font)
 
 
@@ -400,7 +401,25 @@ def CollectAccuracy(sam_path, accuracy_path, suppress_error_messages=False):
 	except IOError:
 		if (suppress_error_messages == False):
 			sys.stderr.write('ERROR: Could not open file "%s" for writing!\n' % out_hist_path);
-	
+
+	### Normalizing the histograms.
+	sum_error_rate_counts = sum(error_rate_hist);
+	error_rate_hist = [(100*float(value)/float(sum_error_rate_counts)) for value in error_rate_hist];
+
+	sum_insertion_rate_counts = sum(insertion_hist);
+	insertion_hist = [(100*float(value)/float(sum_insertion_rate_counts)) for value in insertion_hist];
+
+	sum_deletion_rate_counts = sum(deletion_hist);
+	deletion_hist = [(100*float(value)/float(sum_deletion_rate_counts)) for value in deletion_hist];
+
+	sum_snp_rate_counts = sum(snp_hist);
+	snp_hist = [(100*float(value)/float(sum_snp_rate_counts)) for value in snp_hist];
+
+	sum_match_rate_counts = sum(match_hist);
+	match_hist = [(100*float(value)/float(sum_match_rate_counts)) for value in match_hist];
+
+
+
 	PlotErrorRates(error_rate_hist, insertion_hist, deletion_hist, snp_hist, match_hist, sam_basename, out_png_path);
 	
 	#return [match_rate, mismatch_rate, insertion_rate, deletion_rate, error_rate, matches, mismatches, insertions, deletions, errors, read_length, clipped_read_length];
@@ -513,110 +532,3 @@ if __name__ == "__main__":
 	[ret_lines, error_rate_hist, insertion_hist, deletion_hist, snp_hist, match_hist, sam_basename, out_png_path] = CollectAccuracy(sam_file, out_accuracy_counts_path);
 	sys.stdout.write(ret_lines);
 	plt.show();
-
-
-
-# if __name__ == "__main__":
-	
-# 	#COLLECT_RESULTS_WITHOUT_REANALYSIS = True;
-# 	COLLECT_RESULTS_WITHOUT_REANALYSIS = False;
-	
-# 	reference_path = '/home/ivan/work/eclipse-workspace/data/minion-review/reference/escherichia_coli.fa';
-# 	#sam_path = '/home/ivan/work/eclipse-workspace/data/minion-review/alignment/graphmap-reads-Ecoli_R7_CombinedFasta-joined.sam';
-	
-# 	#sam_path = '/home/ivan/work/eclipse-workspace/data/minion-review/alignment/graphmap-reads-Ecoli_R7_CombinedFasta/graphmap-ForwardReads.sam';
-# 	#sam_path = '/home/ivan/work/eclipse-workspace/data/minion-review/alignment/graphmap-reads-Ecoli_R7_CombinedFasta/graphmap-ReverseReads.sam';
-# 	#sam_path = '/home/ivan/work/eclipse-workspace/data/minion-review/alignment/graphmap-reads-Ecoli_R7_CombinedFasta/graphmap-NormalTwoDirectionReads.sam';
-# 	#sam_path = '/home/ivan/work/eclipse-workspace/data/minion-review/alignment/graphmap-reads-Ecoli_R7_CombinedFasta/graphmap-HighQualityTwoDirectionReads.sam';
-	
-# 	#sam_path = '/home/ivan/work/eclipse-workspace/data/minion-review/alignment/lastal-graphmap-reads-Ecoli_R7_CombinedFasta/lastal-ForwardReads.sam';
-# 	#sam_path = '/home/ivan/work/eclipse-workspace/data/minion-review/alignment/lastal-graphmap-reads-Ecoli_R7_CombinedFasta/lastal-ReverseReads.sam';
-# 	#sam_path = '/home/ivan/work/eclipse-workspace/data/minion-review/alignment/lastal-graphmap-reads-Ecoli_R7_CombinedFasta/lastal-NormalTwoDirectionReads.sam';
-# 	#sam_path = '/home/ivan/work/eclipse-workspace/data/minion-review/alignment/lastal-graphmap-reads-Ecoli_R7_CombinedFasta/lastal-HighQualityTwoDirectionReads.sam';
-	
-# 	sam_paths_ecoliR7 = [
-# 	'/home/ivan/work/eclipse-workspace/data/minion-review/alignment/graphmap-reads-Ecoli_R7_CombinedFasta/graphmap-ForwardReads.sam',
-# 	'/home/ivan/work/eclipse-workspace/data/minion-review/alignment/graphmap-reads-Ecoli_R7_CombinedFasta/graphmap-ReverseReads.sam',
-# 	'/home/ivan/work/eclipse-workspace/data/minion-review/alignment/graphmap-reads-Ecoli_R7_CombinedFasta/graphmap-NormalTwoDirectionReads.sam',
-# 	'/home/ivan/work/eclipse-workspace/data/minion-review/alignment/graphmap-reads-Ecoli_R7_CombinedFasta/graphmap-HighQualityTwoDirectionReads.sam',
-# 	'/home/ivan/work/eclipse-workspace/data/minion-review/alignment/graphmap-reads-Ecoli_R7_CombinedFasta-joined.sam',
-# 	'/home/ivan/work/eclipse-workspace/data/minion-review/alignment/lastal-graphmap-reads-Ecoli_R7_CombinedFasta/lastal-ForwardReads.sam',
-# 	'/home/ivan/work/eclipse-workspace/data/minion-review/alignment/lastal-graphmap-reads-Ecoli_R7_CombinedFasta/lastal-ReverseReads.sam',
-# 	'/home/ivan/work/eclipse-workspace/data/minion-review/alignment/lastal-graphmap-reads-Ecoli_R7_CombinedFasta/lastal-NormalTwoDirectionReads.sam',
-# 	'/home/ivan/work/eclipse-workspace/data/minion-review/alignment/lastal-graphmap-reads-Ecoli_R7_CombinedFasta/lastal-HighQualityTwoDirectionReads.sam',
-# 	'/home/ivan/work/eclipse-workspace/data/minion-review/alignment/lastal-reads-Ecoli_R7_CombinedFasta-joined.sam'
-# 	];
-	
-	
-	
-# 	#sam_paths_ecoliR7 = [
-# 	#'/home/ivan/work/eclipse-workspace/data/minion-review/alignment/graphmap-reads-Ecoli_R7_CombinedFasta/graphmap-ForwardReads.sam',
-# 	#'/home/ivan/work/eclipse-workspace/data/minion-review/alignment/graphmap-reads-Ecoli_R7_CombinedFasta/graphmap-ReverseReads.sam',
-# 	#'/home/ivan/work/eclipse-workspace/data/minion-review/alignment/graphmap-reads-Ecoli_R7_CombinedFasta/graphmap-NormalTwoDirectionReads.sam',
-# 	#'/home/ivan/work/eclipse-workspace/data/minion-review/alignment/graphmap-reads-Ecoli_R7_CombinedFasta/graphmap-HighQualityTwoDirectionReads.sam'
-# 	#]
-		
-# 	#reference_path = '/home/ivan/work/eclipse-workspace/data-nanopore/3-data-review_paper-lambda/reference/NC_001416.fa';
-# 	#sam_path = '/home/ivan/work/eclipse-workspace/data-nanopore/3-data-review_paper-lambda/alignment/graphmap-lambda_reads_2d.sam';
-# 	#sam_path = '/home/ivan/work/eclipse-workspace/data-nanopore/3-data-review_paper-lambda/alignment/lastal-lambda_reads_2d.sam';
-	
-	
-	
-# 	#sam_path = '/home/ivan/work/eclipse-workspace/data/minion-review/E.Coli-R7.3/alignment-graphmap-ecoliR7.3.sam';
-# 	##sam_path = '/home/ivan/work/eclipse-workspace/data/minion-review/E.Coli-R7.3/alignment-lastal-ecoliR7.3.sam';
-	
-# 	sam_paths_lambda_mt = [
-# 		'/home/ivan/work/eclipse-workspace/data-nanopore/3-data-review_paper-lambda/alignment/graphmap-lambda_reads_1d.sam',
-# 		'/home/ivan/work/eclipse-workspace/data-nanopore/3-data-review_paper-lambda/alignment/lastal-lambda_reads_1d.sam',
-# 		'/home/ivan/work/eclipse-workspace/data-nanopore/3-data-review_paper-lambda/alignment/graphmap-lambda_reads_2d.sam',
-# 		'/home/ivan/work/eclipse-workspace/data-nanopore/3-data-review_paper-lambda/alignment/lastal-lambda_reads_2d.sam'
-# 		];
-	
-# 	sam_paths_ecoliR73 = [
-# 		'/home/ivan/work/eclipse-workspace/data/minion-review/E.Coli-R7.3/alignment-graphmap-ecoliR7.3.sam',
-# 		'/home/ivan/work/eclipse-workspace/data/minion-review/E.Coli-R7.3/alignment-lastal-ecoliR7.3.sam'
-# 		];
-	
-		
-# 	sam_paths_simulated_percentages = [
-# 		#'/home/ivan/work/eclipse-workspace/golden-bundle/alignments_for_testing/reads-simulated/OxfordNanopore-pbsim-10_percent/escherichia_coli/graphmap.sam',
-# 		#'/home/ivan/work/eclipse-workspace/golden-bundle/alignments_for_testing/reads-simulated/OxfordNanopore-pbsim-20_percent/escherichia_coli/graphmap.sam',
-# 		#'/home/ivan/work/eclipse-workspace/golden-bundle/alignments_for_testing/reads-simulated/OxfordNanopore-pbsim-30_percent/escherichia_coli/graphmap.sam',
-# 		'/home/ivan/work/eclipse-workspace/golden-bundle/alignments_for_testing/reads-simulated/OxfordNanopore-pbsim-40_percent/escherichia_coli/graphmap-params_40perc.sam',
-# 		'/home/ivan/work/eclipse-workspace/golden-bundle/reads-simulated/OxfordNanopore-pbsim-40_percent/escherichia_coli/reads.sam'
-# 		];
-	
-# 	#sam_paths = sam_paths_ecoliR73;
-# 	#sam_paths = sam_paths_lambda_mt;
-# 	sam_paths = sam_paths_simulated_percentages;
-	
-# 	for sam_path in sam_paths:
-# 		sys.stderr.write('Current sam file: "%s"...' % sam_path);
-		
-# 		accuracy_counts_path = 'accuracy/accuracy-' + os.path.splitext(os.path.basename(sam_path))[0] + '.csv';
-		
-# 		if COLLECT_RESULTS_WITHOUT_REANALYSIS == False:
-# 			#CollectAccuracy(accuracy_counts_path);
-# 			#exit(0);
-		
-# 			[ref_headers, ref_seqs, ref_quals] = fastqparser.read_fastq(reference_path);
-			
-# 			references = {};
-			
-# 			i = 0;
-# 			while i < len(ref_headers):
-# 				header = ref_headers[i];
-# 				seq = ref_seqs[i];
-# 				references[header] = seq;
-# 				i += 1;
-				
-# 			ProcessSAM(references, sam_path, accuracy_counts_path);
-			
-# 			#print accuracy_counts;
-		
-# 		[summary_cigar, error_rate_hist, insertion_hist, deletion_hist, snp_hist, match_hist, dataset_name, out_png_path] = CollectAccuracy(sam_path, accuracy_counts_path);
-# 		sys.stdout.write(ret_lines + '\n');
-
-# 	plt.show();
-
-# 	pass;
