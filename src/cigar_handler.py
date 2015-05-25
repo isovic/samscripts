@@ -350,14 +350,18 @@ def CollectAccuracy(sam_path, accuracy_path, suppress_error_messages=False):
 	# ret_lines += 'Match rate stats:     \t%s\n' % (',\t'.join(['%s = %.2f' % (column_labels[i], match_rate_stats[i]) for i in range(len(error_rate_stats))]));
 	# ret_lines += 'Read length stats:    \t%s\n' % (',\t'.join(['%s = %.2f' % (column_labels[i], read_length_stats[i]) for i in range(len(error_rate_stats))]));
 
+	
 	ret_lines = '';
-	ret_lines += '                      \t%s\n' % ('\t'.join(['%s' % (column_labels[i]) for i in range(len(error_rate_stats))]));
-	ret_lines += 'Error rate:     \t%s\n' % ('\t'.join(['%.2f' % (error_rate_stats[i]) for i in range(len(error_rate_stats))]));
-	ret_lines += 'Insertion rate: \t%s\n' % ('\t'.join(['%.2f' % (insertion_rate_stats[i]) for i in range(len(error_rate_stats))]));
-	ret_lines += 'Deletion rate:  \t%s\n' % ('\t'.join(['%.2f' % (deletion_rate_stats[i]) for i in range(len(error_rate_stats))]));
-	ret_lines += 'Mismatch rate:  \t%s\n' % ('\t'.join(['%.2f' % (mismatch_rate_stats[i]) for i in range(len(error_rate_stats))]));
-	ret_lines += 'Match rate:     \t%s\n' % ('\t'.join(['%.2f' % (match_rate_stats[i]) for i in range(len(error_rate_stats))]));
-	ret_lines += 'Read length:    \t%s\n' % ('\t'.join(['%.2f' % (read_length_stats[i]) for i in range(len(error_rate_stats))]));
+	lines_error_rates = '';
+	lines_error_rates += '                      \t%s\n' % ('\t'.join(['%s' % (column_labels[i]) for i in range(len(error_rate_stats))]));
+	lines_error_rates += 'Error rate:     \t%s\n' % ('\t'.join(['%.2f' % (error_rate_stats[i]) for i in range(len(error_rate_stats))]));
+	lines_error_rates += 'Insertion rate: \t%s\n' % ('\t'.join(['%.2f' % (insertion_rate_stats[i]) for i in range(len(error_rate_stats))]));
+	lines_error_rates += 'Deletion rate:  \t%s\n' % ('\t'.join(['%.2f' % (deletion_rate_stats[i]) for i in range(len(error_rate_stats))]));
+	lines_error_rates += 'Mismatch rate:  \t%s\n' % ('\t'.join(['%.2f' % (mismatch_rate_stats[i]) for i in range(len(error_rate_stats))]));
+	lines_error_rates += 'Match rate:     \t%s\n' % ('\t'.join(['%.2f' % (match_rate_stats[i]) for i in range(len(error_rate_stats))]));
+	lines_error_rates += 'Read length:    \t%s\n' % ('\t'.join(['%.2f' % (read_length_stats[i]) for i in range(len(error_rate_stats))]));
+
+	ret_lines += lines_error_rates;
 	
 	#ret_lines += 'Error rate stats: %s\n' % (', '.join(['%.2f' % value for value in error_rate_stats]));
 	#ret_lines += 'Insertion rate stats: %s\n' % (', '.join(['%.2f' % value for value in insertion_rate_stats]));
@@ -424,7 +428,7 @@ def CollectAccuracy(sam_path, accuracy_path, suppress_error_messages=False):
 	
 	#return [match_rate, mismatch_rate, insertion_rate, deletion_rate, error_rate, matches, mismatches, insertions, deletions, errors, read_length, clipped_read_length];
 	
-	return [ret_lines, error_rate_hist, insertion_hist, deletion_hist, snp_hist, match_hist, sam_basename, out_png_path];
+	return [ret_lines, lines_error_rates, error_rate_hist, insertion_hist, deletion_hist, snp_hist, match_hist, sam_basename, out_png_path];
 	
 	
 
@@ -522,13 +526,24 @@ if __name__ == "__main__":
 
 	# sys.stderr.write('Using mode: %s\n' % mode);
 	
-	out_accuracy_counts_path = '%s/error_rates-%s-%s.csv' % (out_path, mode, os.path.basename(sam_file));
+	out_accuracy_counts_path = '%s/%s-error_rates-%s.csv' % (out_path, os.path.basename(sam_file), mode);
+	# out_summary_path = '%s/%s-error_rates-%s-summary.txt' % (out_path, os.path.basename(sam_file), mode);
+	out_summary_stats_path = '%s/%s-error_rates-%s-summary.csv' % (out_path, os.path.basename(sam_file), mode);
 
 	if (mode == 'base'):
 		ProcessFromFiles(reference_file, sam_file, out_accuracy_counts_path, False);
 	if (mode == 'event'):
 		ProcessFromFiles(reference_file, sam_file, out_accuracy_counts_path, True);
 
-	[ret_lines, error_rate_hist, insertion_hist, deletion_hist, snp_hist, match_hist, sam_basename, out_png_path] = CollectAccuracy(sam_file, out_accuracy_counts_path);
+	[ret_lines, lines_error_rates, error_rate_hist, insertion_hist, deletion_hist, snp_hist, match_hist, sam_basename, out_png_path] = CollectAccuracy(sam_file, out_accuracy_counts_path);
 	sys.stdout.write(ret_lines);
+
+	# fp_summary = open(out_summary_path, 'w');
+	# fp_summary.write(ret_lines);
+	# fp_summary.close();
+
+	fp_summary_stats_path = open(out_summary_stats_path, 'w');
+	fp_summary_stats_path.write(lines_error_rates);
+	fp_summary_stats_path.close();
+
 	plt.show();
