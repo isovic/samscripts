@@ -647,6 +647,7 @@ def HashSAMLines(sam_lines):
 
 	for key in ret.keys():
 		ret[key].sort(reverse=True, key=lambda sam_line: sam_line.chosen_quality);
+		# ret[key].sort(reverse=True, key=lambda sam_line: ((sam_line.IsSecondary() == False), sam_line.chosen_quality));
 
 	return [ret, num_lines, num_unique_lines];
 
@@ -730,6 +731,7 @@ def HashSAM(sam_path):
 
 	for key in ret.keys():
 		ret[key].sort(reverse=True, key=lambda sam_line: sam_line.chosen_quality);
+		# ret[key].sort(reverse=True, key=lambda sam_line: ((sam_line.IsSecondary() == False), sam_line.chosen_quality));
 
 	return [ret, num_references, num_unique_references];
 

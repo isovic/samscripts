@@ -1,5 +1,9 @@
 #! /usr/bin/python
 
+# Copyright Ivan Sovic, 2015. www.sovic.org
+# 
+# Analyzes error rates from a given SAM file, and plots results.
+
 import os;
 import sys;
 import fastqparser;
