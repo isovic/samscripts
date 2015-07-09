@@ -162,7 +162,7 @@ def process_mpileup_line(line, line_number, ret_variant_list, ret_vcf_list, ret_
 
 	return [position, coverage];
 
-def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_threshold, output_prefix, thread_id=0, bed_position=''):
+def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_threshold, out_file, thread_id=0, bed_position=''):
 	fp = None;
 	try:
 		fp = open(mpileup_path, 'r');
@@ -185,25 +185,26 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 	
 	fp_variant = None;
 	fp_vcf = None;
-	if (output_prefix != ''):
-		variant_file = ('%s-cov_%d.variant.csv' % (output_prefix, coverage_threshold));
-		fp_variant = open(variant_file, 'w');
+	fp_out = open(out_file, 'w');
+	# if (output_prefix != ''):
+		# variant_file = ('%s-cov_%d.variant.csv' % (output_prefix, coverage_threshold));
+		# fp_variant = open(variant_file, 'w');
 
-		vcf_file = ('%s-cov_%d.variant.vcf' % (output_prefix, coverage_threshold));
-		fp_vcf = open(vcf_file, 'w');
-		fp_vcf.write('##fileformat=VCFv4.0\n');
-		fp_vcf.write('##fileDate=20150409\n');
-		fp_vcf.write('##source=%s\n' % (' '.join(sys.argv)));
-		fp_vcf.write('##reference=%s\n' % reference_path);
-		fp_vcf.write('##INFO=<ID=DP,Number=1,Type=Integer,Description="Raw Depth">\n');
-		fp_vcf.write('##INFO=<ID=AF,Number=1,Type=Float,Description="Allele Frequency">\n');
-		fp_vcf.write('##INFO=<ID=SB,Number=1,Type=Integer,Description="Phred-scaled strand bias at this position">\n');
-		fp_vcf.write('##INFO=<ID=DP4,Number=4,Type=Integer,Description="Counts for ref-forward bases, ref-reverse, alt-forward and alt-reverse bases">\n');
-		fp_vcf.write('##INFO=<ID=INDEL,Number=0,Type=Flag,Description="Indicates that the variant is an INDEL.">\n');
-		fp_vcf.write('##INFO=<ID=CONSVAR,Number=0,Type=Flag,Description="Indicates that the variant is a consensus variant (as opposed to a low frequency variant).">\n');
-		fp_vcf.write('##INFO=<ID=HRUN,Number=1,Type=Integer,Description="Homopolymer length to the right of report indel position">\n');
-		fp_vcf.write('#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n');
-		fp_vcf.flush();
+		# vcf_file = ('%s-cov_%d.variant.vcf' % (output_prefix, coverage_threshold));
+		# fp_vcf = open(vcf_file, 'w');
+		# fp_vcf.write('##fileformat=VCFv4.0\n');
+		# fp_vcf.write('##fileDate=20150409\n');
+		# fp_vcf.write('##source=%s\n' % (' '.join(sys.argv)));
+		# fp_vcf.write('##reference=%s\n' % reference_path);
+		# fp_vcf.write('##INFO=<ID=DP,Number=1,Type=Integer,Description="Raw Depth">\n');
+		# fp_vcf.write('##INFO=<ID=AF,Number=1,Type=Float,Description="Allele Frequency">\n');
+		# fp_vcf.write('##INFO=<ID=SB,Number=1,Type=Integer,Description="Phred-scaled strand bias at this position">\n');
+		# fp_vcf.write('##INFO=<ID=DP4,Number=4,Type=Integer,Description="Counts for ref-forward bases, ref-reverse, alt-forward and alt-reverse bases">\n');
+		# fp_vcf.write('##INFO=<ID=INDEL,Number=0,Type=Flag,Description="Indicates that the variant is an INDEL.">\n');
+		# fp_vcf.write('##INFO=<ID=CONSVAR,Number=0,Type=Flag,Description="Indicates that the variant is a consensus variant (as opposed to a low frequency variant).">\n');
+		# fp_vcf.write('##INFO=<ID=HRUN,Number=1,Type=Integer,Description="Homopolymer length to the right of report indel position">\n');
+		# fp_vcf.write('#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n');
+		# fp_vcf.flush();
 
 
 
@@ -244,7 +245,7 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 	insertion_events = [];
 	deletion_events = [];
 
-	sys.stdout.write(new_insertion_event.csv_header() + '\n');
+	fp_out.write(new_insertion_event.csv_header() + '\n');
 
 	# i = 0;
 	i = 0 if (use_bed == False) else max((bed_pos_start - 10), 0);
@@ -282,10 +283,10 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 		event_coverage_threshold = max(int(0.15 * float(mpileup_cov)), 5);
 
 		if (threshold_switch_insertions == False and len(opened_insertion_events) >= event_coverage_threshold):
-			try:
-				sys.stderr.write('\n+++ [I] Opened plausible structural event! Position: %d, coverage: %d, len(opened_insertion_events): %d, last_len: %d, event_coverage_threshold: %d\n' % (int(mpileup_pos), int(mpileup_cov), len(opened_insertion_events), opened_insertion_events[-1][0], event_coverage_threshold));
-			except Exception, e:
-				sys.stderr.write(str(e));
+			##### try:
+			##### 	sys.stderr.write('\n+++ [I] Opened plausible structural event! Position: %d, coverage: %d, len(opened_insertion_events): %d, last_len: %d, event_coverage_threshold: %d\n' % (int(mpileup_pos), int(mpileup_cov), len(opened_insertion_events), opened_insertion_events[-1][0], event_coverage_threshold));
+			##### except Exception, e:
+			##### 	sys.stderr.write(str(e));
 
 			num_insertion_events += 1;
 			threshold_switch_insertions = True;
@@ -298,21 +299,23 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 			new_insertion_event.max_event_length = max([new_insertion_event.max_event_length] + [insertion_event[1] for insertion_event in opened_insertion_events]);
 			new_insertion_event.end = -1;
 		elif (threshold_switch_insertions == True and len(opened_insertion_events) < event_coverage_threshold):
-			sys.stderr.write('\n--- [I] Closed plausible structural event! Position: %d, coverage: %d, len(opened_insertion_events): %d\n' % (int(mpileup_pos), int(mpileup_cov), len(opened_insertion_events)));
+			##### sys.stderr.write('\n--- [I] Closed plausible structural event! Position: %d, coverage: %d, len(opened_insertion_events): %d\n' % (int(mpileup_pos), int(mpileup_cov), len(opened_insertion_events)));
 			threshold_switch_insertions = False;
 			new_insertion_event.end = int(mpileup_pos)
 			new_insertion_event.close_coverage = len(opened_insertion_events);
 			insertion_events.append(new_insertion_event);
-			sys.stderr.write('Event:\n');
-			sys.stdout.write(new_insertion_event.to_string() + '\n');
-			sys.stdout.flush();
+			##### sys.stderr.write('Event:\n');
+			sys.stderr.write(' ' + new_insertion_event.to_string());
+			sys.stderr.write('\n');
+			fp_out.write(new_insertion_event.to_string() + '\n');
+			fp_out.flush();
 			new_insertion_event.clear();
 
 		if (threshold_switch_deletions == False and len(opened_deletion_events) >= event_coverage_threshold):
-			try:
-				sys.stderr.write('\n+++ [D] Opened plausible structural event! Position: %d, coverage: %d, len(opened_deletion_events): %d, last_len: %d, event_coverage_threshold: %d\n' % (int(mpileup_pos), int(mpileup_cov), len(opened_deletion_events), opened_deletion_events[-1][0], event_coverage_threshold));
-			except Exception, e:
-				sys.stderr.write(str(e));
+			##### try:
+			##### 	sys.stderr.write('\n+++ [D] Opened plausible structural event! Position: %d, coverage: %d, len(opened_deletion_events): %d, last_len: %d, event_coverage_threshold: %d\n' % (int(mpileup_pos), int(mpileup_cov), len(opened_deletion_events), opened_deletion_events[-1][0], event_coverage_threshold));
+			##### except Exception, e:
+			##### 	sys.stderr.write(str(e));
 			threshold_switch_deletions = True;
 			num_deletion_events += 1;
 			
@@ -324,14 +327,16 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 			new_deletion_event.max_event_length = max([new_deletion_event.max_event_length] + [deletion_event[1] for deletion_event in opened_deletion_events]);
 			new_deletion_event.end = -1;
 		elif (threshold_switch_deletions == True and len(opened_deletion_events) < event_coverage_threshold):
-			sys.stderr.write('\n--- [D] Closed plausible structural event! Position: %d, coverage: %d, len(opened_deletion_events): %d\n' % (int(mpileup_pos), len(mpileup_cov), len(opened_deletion_events)));
+			##### sys.stderr.write('\n--- [D] Closed plausible structural event! Position: %d, coverage: %d, len(opened_deletion_events): %d\n' % (int(mpileup_pos), len(mpileup_cov), len(opened_deletion_events)));
 			threshold_switch_deletions = False;
 			new_deletion_event.end = int(mpileup_pos)
 			new_deletion_event.close_coverage = len(opened_insertion_events);
 			deletion_events.append(new_deletion_event);
-			sys.stderr.write('Event:\n');
-			sys.stdout.write(new_deletion_event.to_string() + '\n');
-			sys.stdout.flush();
+			##### sys.stderr.write('Event:\n');
+			sys.stderr.write(' ' + new_deletion_event.to_string());
+			sys.stderr.write('\n');
+			fp_out.write(new_deletion_event.to_string() + '\n');
+			fp_out.flush();
 			new_deletion_event.clear();
 
 		if (new_insertion_event.is_open() == True):
@@ -366,13 +371,13 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 
 
 		
-		if (len(ret_variant_list) > variant_list_length and fp_variant != None):
-			fp_variant.write('\n'.join(ret_variant_list[variant_list_length:]) + '\n');
-			fp_variant.flush();
+		# if (len(ret_variant_list) > variant_list_length and fp_variant != None):
+		# 	fp_variant.write('\n'.join(ret_variant_list[variant_list_length:]) + '\n');
+		# 	fp_variant.flush();
 
-		if (len(ret_vcf_list) > vcf_list_length and fp_vcf != None):
-			fp_vcf.write('\n'.join(ret_vcf_list[vcf_list_length:]) + '\n');
-			fp_vcf.flush();
+		# if (len(ret_vcf_list) > vcf_list_length and fp_vcf != None):
+		# 	fp_vcf.write('\n'.join(ret_vcf_list[vcf_list_length:]) + '\n');
+		# 	fp_vcf.flush();
 
 		# i += num_bases_to_skip;
 		i += 1;
@@ -381,41 +386,147 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 		#if (i > 10000):
 			#break;
 
-	if (fp_variant != None):
-		fp_variant.close();
+	# if (fp_variant != None):
+	# 	fp_variant.close();
 
-	if (fp_vcf != None):
-		fp_vcf.close();
+	# if (fp_vcf != None):
+	# 	fp_vcf.close();
 	
 	sys.stderr.write('\n');
 
-	summary_lines = '';
-	summary_lines += 'alignments_file: %s\n' % alignments_path;
-	summary_lines += 'mpileup_file: %s\n' % mpileup_path;
-	summary_lines += 'coverage_threshold: %d\n' % coverage_threshold;
-	summary_lines += 'snp_count: %d\n' % ret_snp_count[0];
-	summary_lines += 'insertion_count: %d\n' % ret_insertion_count[0];
-	summary_lines += 'deletion_count: %d\n' % ret_deletion_count[0];
-	summary_lines += 'num_undercovered_bases: %d\n' % ret_num_undercovered_bases[0];
-	summary_lines += 'num_called_bases: %d\n' % ret_num_called_bases[0];
-	summary_lines += 'num_correct_bases: %d\n' % ret_num_correct_bases[0];
-	summary_lines += 'average_coverage: %.2f\n' % ((float(ret_coverage_sum[0])/float((i + 1))));
+	# summary_lines = '';
+	# summary_lines += 'alignments_file: %s\n' % alignments_path;
+	# summary_lines += 'mpileup_file: %s\n' % mpileup_path;
+	# summary_lines += 'coverage_threshold: %d\n' % coverage_threshold;
+	# summary_lines += 'snp_count: %d\n' % ret_snp_count[0];
+	# summary_lines += 'insertion_count: %d\n' % ret_insertion_count[0];
+	# summary_lines += 'deletion_count: %d\n' % ret_deletion_count[0];
+	# summary_lines += 'num_undercovered_bases: %d\n' % ret_num_undercovered_bases[0];
+	# summary_lines += 'num_called_bases: %d\n' % ret_num_called_bases[0];
+	# summary_lines += 'num_correct_bases: %d\n' % ret_num_correct_bases[0];
+	# summary_lines += 'average_coverage: %.2f\n' % ((float(ret_coverage_sum[0])/float((i + 1))));
 	
-	sys.stderr.write(summary_lines + '\n');
+	# sys.stderr.write(summary_lines + '\n');
 	sys.stderr.write('\n');
+	fp_out.close();
 	
-	if (output_prefix != ''):
-		#summary_file = output_prefix + '.conssum';
-		summary_file = ('%s-cov_%d.variant.sum' % (output_prefix, coverage_threshold));
+	# if (output_prefix != ''):
+	# 	#summary_file = output_prefix + '.conssum';
+	# 	summary_file = ('%s-cov_%d.variant.sum' % (output_prefix, coverage_threshold));
 
-		try:
-			fp_sum = open(summary_file, 'w');
-			fp_sum.write(summary_lines);
-			fp_sum.close();
-		except IOError:
-			sys.stderr.write('ERROR: Could not open file "%s" for writing!\n' % (summary_file));
+	# 	try:
+	# 		fp_sum = open(summary_file, 'w');
+	# 		fp_sum.write(summary_lines);
+	# 		fp_sum.close();
+	# 	except IOError:
+	# 		sys.stderr.write('ERROR: Could not open file "%s" for writing!\n' % (summary_file));
 
-def main(alignments_path, reference_path, coverage_threshold, output_prefix, thread_id=0, bed_position=""):
+class StructEvent:
+	def __init__(self, size=0, type='', position=0):
+		self.size = size;
+		self.type = type;
+		self.position = position;
+		self.position_final = position;
+		self.open_cov = 0;
+		self.close_cov = 0;
+		self.max_cov = 0;
+		self.max_event_length = 0;
+		self.comment = '';
+		self.evaluation = '(not evaluated)';
+
+	def verbose(self):
+		sys.stderr.write(self.verbose_to_string());
+
+	def verbose_to_string(self):
+		event_type = 'insertion_in_read' if (self.type == 'D' or self.type == 'insertion_in_read') else 'deletion_in_read';
+		return 'Event type: %s, position: %7d, end: %7d, size: %4d, max_event_length = %4d, result: %s, comment: %s' % (event_type, self.position, (self.position + self.size), self.size, self.max_event_length, self.evaluation, self.comment);
+
+	def csv_line(self):
+		# ret = 'type: %s\tstart: %d\tend: %d\topen_cov: %d\tclose_cov: %d\tmax_cov: %d' % (self.type, self.start, self.end, self.open_coverage, self.close_coverage, self.max_coverage);
+		event_type = 'insertion_in_read' if (self.type == 'D' or self.type == 'insertion_in_read') else 'deletion_in_read';
+		ret = '%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%s' % (event_type, self.position, (self.position + self.size), self.size, self.open_cov, self.close_cov, self.max_cov, self.max_event_length, self.comment);
+		return ret;
+
+	def csv_header(self):
+		ret = 'type\tstart\tend\tlength\topen_cov\tclose_cov\tmax_cov\tmax_event_length\tcomment';
+		return ret;
+
+def chain_events(events_path):
+	events = [];
+
+	num_lines = 0;
+	fp = open(events_path, 'r');
+	for line in fp:
+		num_lines += 1;
+		line = line.strip();
+		if (len(line) == 0):
+			continue;
+
+		if (num_lines == 1):
+			labels = line;
+			continue;
+
+		# print line;
+
+		values = line.split('\t');
+		# event_type = 'I' if (values[0] == 'deletion_in_read') else 'D';
+		event_type = 'insertion_in_read' if (values[0] == 'D' or values[0] == 'insertion_in_read') else 'deletion_in_read';
+		start = int(values[1]);
+		end = int(values[2]);
+		length = int(values[3]);
+		open_cov = int(values[4]);
+		close_cov = int(values[5]);
+		max_cov = int(values[6]);
+		max_event_length = int(values[7]);
+		comment = values[8] if (len(values) > 8) else '';
+
+		event = StructEvent(length, event_type, start);
+		event.open_cov = open_cov;
+		event.close_cov = close_cov;
+		event.max_cov = max_cov;
+		event.max_event_length = max_event_length;
+		event.comment = comment;
+
+		events.append(event);
+
+	fp.close();
+
+	### Chain events that got fragmented
+	sorted_events = sorted(events, key=lambda x: x.position);
+	chained_events = [];
+	for event in sorted_events:
+		if (len(chained_events) > 0):
+			last_size = chained_events[-1].size;
+			last_endpoint = chained_events[-1].position + last_size;
+			last_type = chained_events[-1].type;
+			distance = abs(event.position - last_endpoint);
+			if (distance <= (last_size + event.size) and last_type == event.type):
+				chained_events[-1].close_cov = event.close_cov;
+				chained_events[-1].max_cov = max(chained_events[-1].max_cov, event.max_cov);
+				chained_events[-1].max_event_length = max(chained_events[-1].max_event_length, event.max_event_length);
+				chained_events[-1].size = event.position + event.size - chained_events[-1].position + 1;
+				# print 'Chaining: %s' % chained_events[-1].verbose_to_string();
+			else:
+				chained_events.append(event);
+		else:
+			chained_events.append(event);
+
+	# sys.stderr.write('Chained events:\n');
+	# for event in chained_events:
+	# 	sys.stderr.write(event.csv_line() + '\n');
+
+	fp = open(events_path + '.1.csv', 'w');
+	fp.write(labels + '\n');
+	fp.write('\n'.join([event.csv_line() for event in chained_events]));
+	fp.write('\n');
+	fp.close();
+
+# Problem je sto je zadnji entry u chainanim eventovima falio u output! Treba provjeriti gdje se proguta!
+
+	return chained_events;
+	# return events;
+
+def main(alignments_path, reference_path, coverage_threshold, out_file, thread_id=0, bed_position=""):
 	# Sanity checking the existence of the file, and the correctness of its extension.
 	# Also, if input file is a SAM file, then convert it to a sorted BAM.
 	alignments_path_bam = alignments_path;
@@ -430,7 +541,7 @@ def main(alignments_path, reference_path, coverage_threshold, output_prefix, thr
 		alignments_path_bam = dir_name + '/' + os.path.splitext(os.path.basename(alignments_path))[0] + '.bam'
 		alignments_path_bam_exists = os.path.exists(alignments_path_bam);
 		# Check if a BAM file with the given name already exists.
-		if (True or alignments_path_bam_exists == False or (alignments_path_bam_exists == True and os.path.getmtime(alignments_path) > os.path.getmtime(alignments_path_bam))):
+		if (alignments_path_bam_exists == False or (alignments_path_bam_exists == True and os.path.getmtime(alignments_path) > os.path.getmtime(alignments_path_bam))):
 			# Convert the SAM file to a sorted BAM file.
 			command = 'samtools view -bS %s | samtools sort - %s' % (alignments_path, os.path.splitext(alignments_path_bam)[0]);
 			sys.stderr.write(command + '\n')
@@ -445,13 +556,14 @@ def main(alignments_path, reference_path, coverage_threshold, output_prefix, thr
 	# Convert the sorted BAM file to a mpileup file if it doesn't exist yet.
 	mpileup_path = ('%s.mpileup' % alignments_path_bam);
 	mpileup_exists = os.path.exists(mpileup_path);
-	if (True or mpileup_exists == False or (mpileup_exists == True and os.path.getmtime(alignments_path) > os.path.getmtime(mpileup_path))):
+	if (mpileup_exists == False or (mpileup_exists == True and os.path.getmtime(alignments_path) > os.path.getmtime(mpileup_path))):
 		command = 'samtools mpileup -B -d 1000000 -Q 0 -A -f %s %s > %s.mpileup' % (reference_path, alignments_path_bam, alignments_path_bam);
 		subprocess.call(command, shell='True');
 
 	sys.stderr.write('Processing file "%s"...\n' % alignments_path);
 	sys.stderr.write('Coverage threshold: %d\n' % coverage_threshold);
-	process_mpileup(alignments_path, reference_path, ('%s.mpileup' % alignments_path_bam), coverage_threshold, output_prefix, thread_id, bed_position);
+	process_mpileup(alignments_path, reference_path, ('%s.mpileup' % alignments_path_bam), coverage_threshold, out_file, thread_id, bed_position);
+	chain_events(out_file);
 
 def CollectSummaries(sam_files, collective_output_file):
 	fp_collect = None;
@@ -484,27 +596,29 @@ if __name__ == "__main__":
 	# 	sys.stderr.write('\t(If <collective_output_file> is equal to "-", no files will be written to disk.)\n');
 	# 	exit(1);
 
-	if (len(sys.argv) < 5):
+	if (len(sys.argv) < 4):
 		sys.stderr.write('Usage:\n');
-		sys.stderr.write('\t%s <reference_file_path> coverage_threshold <output_prefix> <{sb}am_file_> [position]\n' % sys.argv[0]);
+		sys.stderr.write('\t%s <reference_file_path> <{sb}am_file> <out_file> [position]\n' % sys.argv[0]);
 		sys.stderr.write('\t(If <collective_output_file> is equal to "-", no files will be written to disk.)\n');
 		sys.stderr.write('\tPosition parameter is a string specifying "chromosome:start-end"\n\n');
 		exit(1);
 	
 	reference_file = sys.argv[1];
-	coverage_threshold = int(sys.argv[2]);
-	output_prefix = sys.argv[3];
-	sam_file = sys.argv[4];
+	coverage_threshold = 0; # int(sys.argv[2]);
+	# output_prefix = sys.argv[3];
+	output_prefix = '-';
+	sam_file = sys.argv[2];
+	out_file = sys.argv[3];
 	bed_position = '';
-	if (len(sys.argv) > 5):
-		bed_position = sys.argv[5];
+	if (len(sys.argv) > 4):
+		bed_position = sys.argv[4];
 	# sys.stderr.write('bed_position: "%s"\n\n' % bed_position);
 	
 	processes = [];
 
-	if (output_prefix == '-'):
-		output_prefix = os.path.splitext(sam_file)[0];
-	main(sam_file, reference_file, coverage_threshold, output_prefix, 0, bed_position);
+	# if (output_prefix == '-'):
+	# 	output_prefix = os.path.splitext(sam_file)[0];
+	main(sam_file, reference_file, coverage_threshold, out_file, 0, bed_position);
 
-	if (output_prefix != '-'):
-		CollectSummaries([sam_file], output_prefix + '.variant.sum');
+	# if (output_prefix != '-'):
+	# 	CollectSummaries([sam_file], output_prefix + '.variant.sum');
