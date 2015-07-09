@@ -563,7 +563,9 @@ def main(alignments_path, reference_path, coverage_threshold, out_file, thread_i
 	sys.stderr.write('Processing file "%s"...\n' % alignments_path);
 	sys.stderr.write('Coverage threshold: %d\n' % coverage_threshold);
 	process_mpileup(alignments_path, reference_path, ('%s.mpileup' % alignments_path_bam), coverage_threshold, out_file, thread_id, bed_position);
+	sys.stderr.write('\nMerging neighboring events...\n');
 	chain_events(out_file);
+	sys.stderr.write('Done!\n');
 
 def CollectSummaries(sam_files, collective_output_file):
 	fp_collect = None;
