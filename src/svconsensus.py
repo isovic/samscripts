@@ -599,7 +599,6 @@ if __name__ == "__main__":
 	if (len(sys.argv) < 4):
 		sys.stderr.write('Usage:\n');
 		sys.stderr.write('\t%s <reference_file_path> <{sb}am_file> <out_file> [position]\n' % sys.argv[0]);
-		sys.stderr.write('\t(If <collective_output_file> is equal to "-", no files will be written to disk.)\n');
 		sys.stderr.write('\tPosition parameter is a string specifying "chromosome:start-end"\n\n');
 		exit(1);
 	

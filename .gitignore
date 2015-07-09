@@ -1,3 +1,4 @@
-src/*pyc
+*.pyc
+src/*.pyc
 *~
 temp/
