@@ -283,8 +283,7 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 	ret_num_correct_bases = [0];
 	ret_coverage_sum = [0];
 	
-	lines = fp.readlines();
-	fp.close();
+	# lines = fp.readlines();
 	
 	fp_variant = None;
 	fp_vcf = None;
@@ -313,7 +312,8 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 	use_bed = False;
 	bed_chromosome = "";
 	bed_pos_start = 0;
-	bed_pos_end = len(lines);
+	# bed_pos_end = len(lines);
+	bed_pos_end = -1;
 	if (bed_position != ""):
 		bed_split = bed_position.split(':');
 		if (len(bed_split) != 2):
@@ -335,7 +335,8 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 	# i = 0;
 	i = 0 if (use_bed == False) else max((bed_pos_start - 10), 0);
 	j = 0;
-	while (i < bed_pos_end): # len(lines)):
+	# while (i < bed_pos_end): # len(lines)):
+	for line in fp:
 		line = lines[i];
 
 		if (use_bed == True):
@@ -376,6 +377,7 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 		
 		#if (i > 10000):
 			#break;
+	fp.close();
 
 	if (fp_variant != None):
 		fp_variant.close();
