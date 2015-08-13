@@ -337,7 +337,7 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 	j = 0;
 	# while (i < bed_pos_end): # len(lines)):
 	for line in fp:
-		line = lines[i];
+		# line = lines[i];
 
 		if (use_bed == True):
 			line_split = line.strip().split('\t');
@@ -426,7 +426,7 @@ def main(alignments_path, reference_path, coverage_threshold, output_prefix, thr
 		alignments_path_bam = dir_name + '/' + os.path.splitext(os.path.basename(alignments_path))[0] + '.bam'
 		alignments_path_bam_exists = os.path.exists(alignments_path_bam);
 		# Check if a BAM file with the given name already exists.
-		if (True or alignments_path_bam_exists == False or (alignments_path_bam_exists == True and os.path.getmtime(alignments_path) > os.path.getmtime(alignments_path_bam))):
+		if (alignments_path_bam_exists == False or (alignments_path_bam_exists == True and os.path.getmtime(alignments_path) > os.path.getmtime(alignments_path_bam))):
 			# Convert the SAM file to a sorted BAM file.
 			command = 'samtools view -bS %s | samtools sort - %s' % (alignments_path, os.path.splitext(alignments_path_bam)[0]);
 			sys.stderr.write(command + '\n')
@@ -441,7 +441,7 @@ def main(alignments_path, reference_path, coverage_threshold, output_prefix, thr
 	# Convert the sorted BAM file to a mpileup file if it doesn't exist yet.
 	mpileup_path = ('%s.mpileup' % alignments_path_bam);
 	mpileup_exists = os.path.exists(mpileup_path);
-	if (True or mpileup_exists == False or (mpileup_exists == True and os.path.getmtime(alignments_path) > os.path.getmtime(mpileup_path))):
+	if (mpileup_exists == False or (mpileup_exists == True and os.path.getmtime(alignments_path) > os.path.getmtime(mpileup_path))):
 		command = 'samtools mpileup -B -d 1000000 -Q 0 -A -f %s %s > %s.mpileup' % (reference_path, alignments_path_bam, alignments_path_bam);
 		subprocess.call(command, shell='True');
 
