@@ -260,7 +260,7 @@ def remove_special_chars_from_headers(input_fastq_path, out_fastq_path, fp_out):
 			break;
 
 		# read[0] = read[0][0] + read[0][1:].replace();
-		read[0] = read[0][0] + re.sub('[^0-9a-zA-Z]', '_', s); # re.sub("[|:", "_", read[0][1:]);
+		read[0] = read[0][0] + re.sub('[^0-9a-zA-Z]', '_', read[0][1:]); # re.sub("[|:", "_", read[0][1:]);
 		fp_out.write('\n'.join(read) + '\n');
 
 	sys.stderr.write('\n');
@@ -283,7 +283,7 @@ def filter_for_marginalign(input_fastq_path, out_fastq_path, fp_out):
 
 		# read[0] = read[0][0] + read[0][1:].replace();
 		if (len(read[1]) <= 50000):
-			read[0] = read[0][0] + re.sub('[^0-9a-zA-Z]', '_', s); # re.sub("[|:", "_", read[0][1:]);
+			read[0] = read[0][0] + re.sub('[^0-9a-zA-Z]', '_', read[0][1:]); # re.sub("[|:", "_", read[0][1:]);
 			fp_out.write('\n'.join(read) + '\n');
 
 	sys.stderr.write('\n');
