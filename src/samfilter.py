@@ -1011,6 +1011,58 @@ def extract_features_csv(sam_file, out_csv_file):
 # _supp[0.0818141]_std[220.923]_AS[0.5619]_AS_std[0.9439]_AS_cov_bases[0.5994]_AS_read_len[1.0000]_AS_query_len[0.9932]_mean_edit_distance_5567.85__max_edit_distance_6805.15__edit_distance_4481_
 
 
+# def add_AS_from_NM(sam_file, out_filtered_sam_file):
+# 	fp_in = None;
+# 	fp_out = None;
+	
+# 	try:
+# 		fp_in = open(sam_file, 'r');
+# 	except IOError:
+# 		sys.stderr.write('[%s] ERROR: Could not open file "%s" for reading!' % (__name__, sam_file));
+# 		exit(1);
+	
+# 	try:
+# 		fp_out = open(out_filtered_sam_file, 'w');
+# 	except IOError:
+# 		sys.stderr.write('[%s] ERROR: Could not open file "%s" for writing!' % (__name__, out_filtered_sam_file));
+# 		exit(1);
+	
+# 	num_accepted = 0;
+# 	num_rejected = 0;
+	
+# 	for line in fp_in:
+# 		line = line.strip();
+# 		if (len(line) == 0 or line[0] == '@'):
+# 			fp_out.write(line);
+# 			continue;
+		
+# 		if ('AS:i:' in line):
+# 			fp_out.write(line);
+# 			continue;
+# 		if (('NM:i:' in line) == False):
+# 			# fp_out.write(line);
+# 			num_rejected += 1;
+# 			continue;
+
+# 		sam_line = utility_sam.SAMLine(line.rstrip());
+# 		new_line = line + '\tAS:i:%d' % (sam_line.edit_distance);
+# 		fp_out.write(new_line + '\n');
+
+# 		# if (float(sam_line.mapq) >= float(mapq_limit)):
+# 		# # if (float(sam_line.mapq) >= float(mapq_limit)):
+# 		# 	fp_out.write(line);
+# 		# 	num_accepted += 1;
+# 		# else:
+# 		# 	num_rejected += 1;
+	
+# 	fp_in.close();
+# 	fp_out.close();
+	
+# 	# sys.stderr.write('num_accepted = %d (%.2f%%)\n' % (num_accepted, (float(num_accepted) / float(num_accepted + num_rejected)) * 100.0));
+# 	# sys.stderr.write('num_rejected = %d (%.2f%%)\n' % (num_rejected, (float(num_rejected) / float(num_accepted + num_rejected)) * 100.0));
+
+
+
 if __name__ == "__main__":
 	if (len(sys.argv) < 2):
 		sys.stderr.write('Various filtering methods for SAM files.\n');
