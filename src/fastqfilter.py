@@ -266,6 +266,29 @@ def remove_special_chars_from_headers(input_fastq_path, out_fastq_path, fp_out):
 	sys.stderr.write('\n');
 	fp_in.close();
 
+def filter_for_marginalign(input_fastq_path, out_fastq_path, fp_out):
+	try:
+		fp_in = open(input_fastq_path, 'r');
+	except:
+		sys.stderr.write('ERROR: Could not open file "%s" for reading! Exiting.\n' % input_fastq_path);
+		exit(0);
+
+	num_matches = 0;
+
+	while True:
+		[header, read] = fastqparser.get_single_read(fp_in);
+		
+		if (len(read) == 0):
+			break;
+
+		# read[0] = read[0][0] + read[0][1:].replace();
+		if (len(read[1]) <= 50000):
+			read[0] = read[0][0] + re.sub('[^0-9a-zA-Z]', '_', s); # re.sub("[|:", "_", read[0][1:]);
+			fp_out.write('\n'.join(read) + '\n');
+
+	sys.stderr.write('\n');
+	fp_in.close();
+
 
 
 if __name__ == "__main__":
@@ -280,6 +303,7 @@ if __name__ == "__main__":
 		sys.stderr.write('\treverse\n');
 		sys.stderr.write('\thardclip\n');
 		sys.stderr.write('\tspecialchars\n');
+		sys.stderr.write('\tmarginalign\n');
 		exit(0);
 
 	if (sys.argv[1] == 'header'):
@@ -469,6 +493,35 @@ if __name__ == "__main__":
 				exit(0);
 
 		remove_special_chars_from_headers(input_fastq_path, out_fastq_path, fp_out);
+
+		if (fp_out != sys.stdout):
+			fp_out.close();
+
+		exit(0);
+
+	elif (sys.argv[1] == 'marginalign'):
+		if (len(sys.argv) < 3 or len(sys.argv) > 4):
+			sys.stderr.write('Removes any non-alnum character from the sequences\' header and replaces it with \'_\'. Also, removes all reads larger than 50kbp.\n');
+			sys.stderr.write('Usage:\n');
+			sys.stderr.write('\t%s %s <input_fastq_file> [<out_filtered_fastq_file>]\n' % (os.path.basename(sys.argv[0]), sys.argv[1]));
+			exit(0);
+
+		input_fastq_path = sys.argv[2];
+
+		out_fastq_path = '';
+		fp_out = sys.stdout;
+		if (len(sys.argv) == 4):
+			out_fastq_path = sys.argv[3];
+			if (input_fastq_path == out_fastq_path):
+				sys.stderr.write('ERROR: Output and input files are the same! Exiting.\n');
+				exit(0);
+			try:
+				fp_out = open(out_fastq_path, 'w');
+			except Exception, e:
+				sys.stderr.write(str(e));
+				exit(0);
+
+		filter_for_marginalign(input_fastq_path, out_fastq_path, fp_out);
 
 		if (fp_out != sys.stdout):
 			fp_out.close();
