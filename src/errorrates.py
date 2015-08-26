@@ -120,10 +120,15 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 			j = 0;
 			while j < cigarop[0]:
 				#print 'ref[%d] %s %s %s read[%d]' % (position_reference, reference_sequence[position_reference], cigarop[1], read_sequence[position_read], position_read);
-				if reference_sequence[position_reference] == read_sequence[position_read]:
-					matches += 1;
-				else:
-					mismatches += 1;
+				try:
+					if reference_sequence[position_reference] == read_sequence[position_read]:
+						matches += 1;
+					else:
+						mismatches += 1;
+				except Exception, e:
+					sys.stderr.write(str(e) + '\n');
+					sys.stderr.write('position_reference = %d, len(reference_sequence) = %d\n' % (position_reference, len(reference_sequence)));
+					sys.stderr.write('position_read = %d, len(read_sequence = %d\n' % (position_read, len(read_sequence)));
 					
 				position_read += 1;
 				position_reference += 1;

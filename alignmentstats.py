@@ -4,18 +4,18 @@ import os;
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__));
 #GOLDEN_PATH = SCRIPT_PATH + '/../../../golden-bundle';
 import sys;
-# sys.path.append(SCRIPT_PATH + '/scripts')
+sys.path.append(SCRIPT_PATH + '/scripts')
 #sys.path.append(GOLDEN_PATH + '/src')
 import subprocess;
 import numpy as np;
 
-# import filesandfolders;
+import filesandfolders;
 import fastqparser;
 import utility_sam;
-import errorrates;
+import cigar_handler;
 import count_mapped_reads;
 # import consensus_stats;
-import consensus;
+import consensus_from_mpileup;
 # import memtime_stats;
 
 USE_MATPLOTLIB = True;
@@ -257,7 +257,7 @@ def analyze_single_sam(mode_code, sam_file, reference_file, reads_file, simulate
 	if (mode_code & MODE_CODE_CALC_CONSENSUS):
 		summary_consensus = '';
 		sys.stderr.write('[main_sam_analysis.py] Calculating consensus statistics, base coverage threshold %d...\n' % (consensus_coverage_threshold));
-		consensus.main(sam_file, reference_file, consensus_coverage_threshold, consensus_prefix, thread_id=0);
+		consensus_from_mpileup.main(sam_file, reference_file, consensus_coverage_threshold, consensus_prefix, thread_id=0);
 		sys.stderr.write('\n');
 	if ((mode_code & MODE_CODE_CALC_CONSENSUS) or (mode_code & MODE_CODE_COLLECT_CONSENSUS)):
 		# Collecting stats from the consensus caller.
@@ -299,45 +299,31 @@ def analyze_single_sam(mode_code, sam_file, reference_file, reads_file, simulate
 
 	if (mode_code & MODE_CODE_CALC_ERROR_RATE):
 		sys.stderr.write('[analyzesam.py] Calculating error rates - individual indels...\n');
-		errorrates.ProcessFromFiles(reference_file, sam_file, out_accuracy_counts_path, False);
+		cigar_handler.ProcessFromFiles(reference_file, sam_file, out_accuracy_counts_path, False);
 		sys.stderr.write('\n');
 	if ((mode_code & MODE_CODE_CALC_ERROR_RATE) or (mode_code & MODE_CODE_COLLECT_ERROR_RATE)):
 		# Collecting stats from the error rate estimation.
-		error_rates_return = errorrates.CollectAccuracy(sam_file, out_accuracy_counts_path, False);
-
-		try:
-			[summary_lines, summary_cigar, error_rate_hist, insertion_hist, deletion_hist, snp_hist, match_hist, cigar_dataset_name, out_png_path] = error_rates_return;
-			fp.write('[CIGAR statistics - individual indels]\n');
-			fp.write(summary_cigar + '\n');
-			sys.stderr.write('[CIGAR statistics - individual indels]\n');
-			sys.stderr.write(summary_cigar + '\n');
-			summary += '[CIGAR statistics - individual indels]\n';
-			summary += summary_cigar + '\n\n';
-
-		except Exception, e:
-			sys.stderr.write(str(e) + '\n');
-			sys.stderr.write('Returned values: %s\n' % (str(error_rates_return)));
+		[summary_cigar, error_rate_hist, insertion_hist, deletion_hist, snp_hist, match_hist, cigar_dataset_name, out_png_path] = cigar_handler.CollectAccuracy(sam_file, out_accuracy_counts_path, False);
+		fp.write('[CIGAR statistics - individual indels]\n');
+		fp.write(summary_cigar + '\n');
+		sys.stderr.write('[CIGAR statistics - individual indels]\n');
+		sys.stderr.write(summary_cigar + '\n');
+		summary += '[CIGAR statistics - individual indels]\n';
+		summary += summary_cigar + '\n\n';
 
 	if (mode_code & MODE_CODE_CALC_ERROR_RATE_INDELS_AS_EVENTS):
 		sys.stderr.write('[analyzesam.py] Calculating error rates - indels as events...\n');
-		errorrates.ProcessFromFiles(reference_file, sam_file, out_accuracy_counts_indel_events_path, True);
+		cigar_handler.ProcessFromFiles(reference_file, sam_file, out_accuracy_counts_indel_events_path, True);
 		sys.stderr.write('\n');
 	if ((mode_code & MODE_CODE_CALC_ERROR_RATE_INDELS_AS_EVENTS) or (mode_code & MODE_CODE_COLLECT_ERROR_RATE_INDELS_AS_EVENTS)):
 		# Collecting stats from the error rate estimation.
-		error_rates_return = errorrates.CollectAccuracy(sam_file, out_accuracy_counts_indel_events_path, False);
-		
-		try:
-			[summary_lines, summary_cigar, error_rate_hist, insertion_hist, deletion_hist, snp_hist, match_hist, cigar_dataset_name, out_png_path] = error_rates_return;
-			# [summary_cigar, error_rate_hist, insertion_hist, deletion_hist, snp_hist, match_hist, cigar_dataset_name, out_png_path] = errorrates.CollectAccuracy(sam_file, out_accuracy_counts_indel_events_path, False);
-			fp.write('[CIGAR statistics - indels as events]\n');
-			fp.write(summary_cigar + '\n');
-			sys.stderr.write('[CIGAR statistics - indels as events]\n');
-			sys.stderr.write(summary_cigar + '\n');
-			summary += '[CIGAR statistics - indels as events]\n';
-			summary += summary_cigar + '\n\n';
-		except Exception, e:
-			sys.stderr.write(str(e) + '\n');
-			sys.stderr.write('Returned values: %s\n' % (str(error_rates_return)));
+		[summary_cigar, error_rate_hist, insertion_hist, deletion_hist, snp_hist, match_hist, cigar_dataset_name, out_png_path] = cigar_handler.CollectAccuracy(sam_file, out_accuracy_counts_indel_events_path, False);
+		fp.write('[CIGAR statistics - indels as events]\n');
+		fp.write(summary_cigar + '\n');
+		sys.stderr.write('[CIGAR statistics - indels as events]\n');
+		sys.stderr.write(summary_cigar + '\n');
+		summary += '[CIGAR statistics - indels as events]\n';
+		summary += summary_cigar + '\n\n';
 
 	# if (mode_code & MODE_CODE_CALC_READ_COUNTS):
 	# 	sys.stderr.write('[main_sam_analysis.py] Counting mapped reads...\n');
