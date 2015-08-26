@@ -1061,6 +1061,67 @@ def extract_features_csv(sam_file, out_csv_file):
 # 	# sys.stderr.write('num_accepted = %d (%.2f%%)\n' % (num_accepted, (float(num_accepted) / float(num_accepted + num_rejected)) * 100.0));
 # 	# sys.stderr.write('num_rejected = %d (%.2f%%)\n' % (num_rejected, (float(num_rejected) / float(num_accepted + num_rejected)) * 100.0));
 
+def filter_out_of_bounds(sam_file, out_filtered_sam_file, out_rejected_sam_file=None):
+	fp_in = None;
+	fp_out = None;
+	
+	try:
+		fp_in = open(sam_file, 'r');
+	except IOError:
+		sys.stderr.write('[%s] ERROR: Could not open file "%s" for reading!' % (__name__, sam_file));
+		exit(1);
+	
+	try:
+		fp_out = open(out_filtered_sam_file, 'w');
+	except IOError:
+		sys.stderr.write('[%s] ERROR: Could not open file "%s" for writing!' % (__name__, out_filtered_sam_file));
+		exit(1);
+
+	fp_out_rejected = None;
+	try:
+		fp_out_rejected = open(out_rejected_sam_file, 'w');
+	except IOError:
+		sys.stderr.write('[%s] ERROR: Could not open file "%s" for writing!' % (__name__, out_rejected_sam_file));
+		exit(1);
+	
+	num_accepted = 0;
+	num_rejected = 0;
+	
+	i = 0;
+	for line in fp_in:
+		i += 1;
+		if (len(line.strip()) == 0 or line[0] == '@'):
+			fp_out.write(line);
+			continue;
+		sys.stderr.write('\rLine %d, num_accepted: %d, num_rejected: %d' % (i, num_accepted, num_rejected));
+		
+		sam_line = utility_sam.SAMLine(line.rstrip());
+
+		pos_start = sam_line.pos - 1;
+		len_on_ref = sam_line.CalcReferenceLengthFromCigar();
+		pos_end = pos_start + len_on_ref - 1;
+		reference_length = 4639675;
+
+		# sam_line = utility_sam.SAMLine(line.rstrip());
+		# split_line = line.rstrip().split('\t');
+		# qname = split_line[0].lower();
+
+		if (sam_line.IsMapped() == False or (sam_line.IsMapped() == True and pos_start >= 0 and pos_end < reference_length)):
+			fp_out.write(line);
+			num_accepted += 1;
+		else:
+			if (fp_out_rejected != None):
+				fp_out_rejected.write(line);
+			num_rejected += 1;
+	
+	fp_in.close();
+	fp_out.close();
+	if (fp_out_rejected != None):
+		fp_out_rejected.close();
+	
+	sys.stderr.write('num_accepted = %d (%.2f%%)\n' % (num_accepted, (float(num_accepted) / float(num_accepted + num_rejected)) * 100.0));
+	sys.stderr.write('num_rejected = %d (%.2f%%)\n' % (num_rejected, (float(num_rejected) / float(num_accepted + num_rejected)) * 100.0));
+
 
 
 if __name__ == "__main__":
@@ -1085,6 +1146,8 @@ if __name__ == "__main__":
 		sys.stderr.write('\tevalue\n');
 		sys.stderr.write('\t1d\n');
 		sys.stderr.write('\t2d\n');
+		sys.stderr.write('\tstats\n');
+		sys.stderr.write('\toutofbounds\n');
 		exit(0);
 
 	if (sys.argv[1] == 'mapq'):
@@ -1392,6 +1455,22 @@ if __name__ == "__main__":
 
 		sam_file = sys.argv[2];
 		sam_stats(sam_file);
+		exit(0);
+
+	elif (sys.argv[1] == 'outofbounds'):
+		if (len(sys.argv) != 5):
+			sys.stderr.write('Check if alignment start and end positions fall within the boundaries of the reference genome.\n');
+			sys.stderr.write('Usage:\n');
+			sys.stderr.write('\t%s %s <input_sam_file> <out_filtered_sam_file> <out_rejected_sam_file>\n' % (sys.argv[0], sys.argv[1], sys.argv[2]));
+			exit(0);
+
+		sam_file = sys.argv[2];
+		out_filtered_sam_file = sys.argv[3];
+		out_rejected_sam_file = sys.argv[4];
+		if (sam_file == out_filtered_sam_file or sam_file == out_rejected_sam_file or out_filtered_sam_file == out_rejected_sam_file):
+			sys.stderr.write('ERROR: Output and input files are the same!\n');
+			exit(0);
+		filter_out_of_bounds(sam_file, out_filtered_sam_file, out_rejected_sam_file);
 		exit(0);
 
 	else:
