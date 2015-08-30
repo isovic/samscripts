@@ -363,8 +363,6 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 		vcf_list_length = len(ret_vcf_list);
 		num_bases_to_skip = process_mpileup_line(line, i, ret_variant_list, ret_vcf_list, ret_snp_count, ret_insertion_count, ret_deletion_count, ret_num_undercovered_bases, ret_num_called_bases, ret_num_correct_bases, ret_coverage_sum, coverage_threshold, verbose=use_bed);
 
-		sys.stderr.write('\n');
-		
 		if (len(ret_variant_list) > variant_list_length and fp_variant != None):
 			fp_variant.write('\n'.join(ret_variant_list[variant_list_length:]) + '\n');
 			fp_variant.flush();
@@ -381,6 +379,8 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 			#break;
 	fp.close();
 
+	sys.stderr.write('\n')
+	
 	if (fp_variant != None):
 		fp_variant.close();
 
