@@ -57,6 +57,9 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 
 	num_processed = 0;
 
+	qnames_not_in_sam_file1 = [];
+	qnames_not_in_sam_file2 = [];
+
 	for qname in sam_hash1.keys():
 		num_processed += 1;
 		sys.stderr.write('\rProcessed %d alignments...' % num_processed);
@@ -75,8 +78,12 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 		sam_line_list_2 = [];
 		try:
 			sam_line_list2 = sam_hash2[qname];
+			if (len(sam_line_list2) > 0 and sam_line_list2[0].IsMapped() == False):
+				not_in_sam_file2 += 1;
+				qnames_not_in_sam_file2.append([sam_line_list1[0].evalue, qname]);
 		except:
 			not_in_sam_file2 += 1;
+			qnames_not_in_sam_file2.append([sam_line_list1[0].evalue, qname]);
 			continue;
 
 		sorted_sam_line_list1 = sorted(sam_line_list1, key=lambda sam_line: (-sam_line.chosen_quality));
@@ -110,8 +117,11 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 		else:
 			if (len(sorted_sam_line_list1) == 0):
 				not_in_sam_file1 += 1;
+				# qnames_not_in_sam_file1.append(qname);
 			if (len(sorted_sam_line_list2) == 0):
 				not_in_sam_file2 += 1;
+				# qnames_not_in_sam_file2.append(qname);
+			sys.stderr.write('Warning: Something odd with qname "%s". Qname present in both files, but lists are empty.\n' % (qname));
 			continue;
 
 		# min_distance = -1;
@@ -128,14 +138,33 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 
 	sys.stderr.write('\n');
 	sys.stderr.write('Counting qnames present in sam_file2 that are missing from sam_file1...\n');
+	num_processed = 0;
 	for qname in sam_hash2.keys():
-		if (len(sam_hash2[qname]) > 0):
-			if (sam_hash2[qname][0].IsMapped() == True):
+		num_processed += 1;
+		sys.stderr.write('\rProcessed %d alignments...' % num_processed);
+		sam_hash2_list = sam_hash2[qname];
+		if (len(sam_hash2_list) > 0):
+			if (sam_hash2_list[0].IsMapped() == True):
 				num_mapped_2 += 1;
-			if (qname in sam_hash1.keys()):
-				pass;
-			else:
-				not_in_sam_file1 += 1;
+
+				try:
+					sam_hash1_list = sam_hash1[qname];
+					if (sam_hash1_list[0].IsMapped() == False):
+						not_in_sam_file1 += 1;
+						qnames_not_in_sam_file1.append([sam_hash2_list[0].evalue, qname]);
+				except:
+					not_in_sam_file1 += 1;
+					qnames_not_in_sam_file1.append([sam_hash2_list[0].evalue, qname]);
+
+		# if (len(sam_hash2_list) > 0):
+		# 	if (sam_hash2_list[0].IsMapped() == True):
+		# 		num_mapped_2 += 1;
+		# 	if (qname in sam_hash1.keys()):
+		# 		pass;
+		# 	else:
+		# 		not_in_sam_file1 += 1;
+		# 		qnames_not_in_sam_file1.append(qname);
+	sys.stderr.write('\n');
 
 	fp_out = None;
 	fp_out_lt0bp = None;
@@ -217,6 +246,20 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 		summary_line_lt0bp = '';
 		summary_line_gt5000bp = '';
 
+		out_file_qnames_not_in_sam1 = out_summary_prefix + '_qnames_not_in_sam1.csv';
+		out_file_qnames_not_in_sam2 = out_summary_prefix + '_qnames_not_in_sam2.csv';
+
+		try:
+			fp_out_qnames_not_in_sam1 = open(out_file_qnames_not_in_sam1, 'w');
+			fp_out_qnames_not_in_sam2 = open(out_file_qnames_not_in_sam2, 'w');
+			# fp_out_qnames_not_in_sam1.write('\n'.join(qnames_not_in_sam_file1) + '\n');
+			fp_out_qnames_not_in_sam1.write('\n'.join(['%e\t%s' % (value[0], value[1]) for value in sorted(qnames_not_in_sam_file1, key=lambda x: x[0])]) + '\n');
+			fp_out_qnames_not_in_sam2.write('\n'.join(['%e\t%s' % (value[0], value[1]) for value in sorted(qnames_not_in_sam_file2, key=lambda x: x[0])]) + '\n');
+			fp_out_qnames_not_in_sam1.close();
+			fp_out_qnames_not_in_sam2.close();
+		except IOError:
+			sys.stderr.write('ERROR: Could not open file(s) for writing! Either "%s" or "%s".\n' % (out_file_qnames_not_in_sam1, out_file_qnames_not_in_sam2));
+
 	if (out_summary_prefix != ''):
 		fp_out.close();
 		fp_out_lt0bp.close();
@@ -239,7 +282,8 @@ if __name__ == "__main__":
 	sam_file1 = sys.argv[1];
 	sam_file2 = sys.argv[2];
 	distance_threshold = 100;
-	out_summary_prefix = '';
+	# out_summary_prefix = 'summary-%s_vs_%s' % (os.path.basename(os.path.splitext(sam_file1)[0]), os.path.basename(os.path.splitext(sam_file2)[0]));
+	out_summary_prefix = 'summary';
 
 	if (len(sys.argv) >= 4):
 		distance_threshold = int(sys.argv[3]);

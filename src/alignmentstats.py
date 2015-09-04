@@ -308,11 +308,11 @@ def analyze_single_sam(mode_code, sam_file, reference_file, reads_file, simulate
 		try:
 			[summary_lines, summary_cigar, error_rate_hist, insertion_hist, deletion_hist, snp_hist, match_hist, cigar_dataset_name, out_png_path] = error_rates_return;
 			fp.write('[CIGAR statistics - individual indels]\n');
-			fp.write(summary_cigar + '\n');
+			fp.write(summary_lines + '\n');
 			sys.stderr.write('[CIGAR statistics - individual indels]\n');
-			sys.stderr.write(summary_cigar + '\n');
+			sys.stderr.write(summary_lines + '\n');
 			summary += '[CIGAR statistics - individual indels]\n';
-			summary += summary_cigar + '\n\n';
+			summary += summary_lines + '\n\n';
 
 		except Exception, e:
 			sys.stderr.write(str(e) + '\n');
@@ -330,11 +330,11 @@ def analyze_single_sam(mode_code, sam_file, reference_file, reads_file, simulate
 			[summary_lines, summary_cigar, error_rate_hist, insertion_hist, deletion_hist, snp_hist, match_hist, cigar_dataset_name, out_png_path] = error_rates_return;
 			# [summary_cigar, error_rate_hist, insertion_hist, deletion_hist, snp_hist, match_hist, cigar_dataset_name, out_png_path] = errorrates.CollectAccuracy(sam_file, out_accuracy_counts_indel_events_path, False);
 			fp.write('[CIGAR statistics - indels as events]\n');
-			fp.write(summary_cigar + '\n');
+			fp.write(summary_lines + '\n');
 			sys.stderr.write('[CIGAR statistics - indels as events]\n');
-			sys.stderr.write(summary_cigar + '\n');
+			sys.stderr.write(summary_lines + '\n');
 			summary += '[CIGAR statistics - indels as events]\n';
-			summary += summary_cigar + '\n\n';
+			summary += summary_lines + '\n\n';
 		except Exception, e:
 			sys.stderr.write(str(e) + '\n');
 			sys.stderr.write('Returned values: %s\n' % (str(error_rates_return)));
@@ -356,10 +356,15 @@ def analyze_single_sam(mode_code, sam_file, reference_file, reads_file, simulate
 		sys.stderr.write('\n');
 		summary_read_count = '';
 		summary_read_count += 'num_alignments: %d\n' % num_alignments;
-		summary_read_count += 'num_mapped_alignments: %d\n' % num_mapped_alignments;
-		summary_read_count += 'num_unique_reads: %d\n' % num_unique_reads;
+		summary_read_count += 'num_mapped_alignments: %d (%.2f%%)\n' % (num_mapped_alignments, (float(num_mapped_alignments) / float(num_alignments)) * 100.0);
+		summary_read_count += 'num_unmapped_alignments: %d (%.2f%%)\n' % ((num_alignments - num_mapped_alignments), (float(num_alignments - num_mapped_alignments) / float(num_alignments)) * 100.0);
 		summary_read_count += 'num_mapped_reads: %d\n' % num_mapped_reads;
+		summary_read_count += 'num_uniquely_mapped_reads: %d\n' % num_unique_reads;
 		summary_read_count += 'num_mapped_bases: %d\n' % num_mapped_bases;
+		summary_read_count += 'num_read_in_input_reads_file: %d\n' % (fastqinfo_num_seqs);
+		summary_read_count += 'num_bases_in_input_reads_file: %d\n' % (fastqinfo_total_seq_len);
+		summary_read_count += 'percent_mapped_reads: %.2f%%\n' % ((float(num_mapped_reads) / float(fastqinfo_num_seqs)) * 100.0);
+		summary_read_count += 'percent_mapped_bases: %.2f%%\n' % ((float(num_mapped_bases) / float(fastqinfo_total_seq_len)) * 100.0);
 
 		summary += '[SAM file statistics]\n';
 		summary += summary_read_count + '\n\n';

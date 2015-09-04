@@ -1122,6 +1122,40 @@ def filter_out_of_bounds(sam_file, out_filtered_sam_file, out_rejected_sam_file=
 	sys.stderr.write('num_accepted = %d (%.2f%%)\n' % (num_accepted, (float(num_accepted) / float(num_accepted + num_rejected)) * 100.0));
 	sys.stderr.write('num_rejected = %d (%.2f%%)\n' % (num_rejected, (float(num_rejected) / float(num_accepted + num_rejected)) * 100.0));
 
+def sam_stats(sam_file, reads_fastq=''):
+	[hashed_sam, num_sam_lines, num_unique_sam_lines] = utility_sam.HashSAMWithFilter(sam_file, {});
+
+	if (reads_fastq != ''):
+		# [headers, seqs, quals] = fastqparser.read_fastq(reads_fastq);
+		# header_hash = {};
+		# i = 0;
+		# while (i < len(headers)):
+		# 	header_hash[headers[i]] = i;
+		# 	header_hash[headers[i].split()[0]] = i;
+		# 	i += 1;
+		read_qnames = get_fastq_headers(reads_fastq);
+
+	sys.stdout.write('Number of SAM lines in file: %d\n' % num_sam_lines);
+	sys.stdout.write('Number of SAM lines with unique qname: %d\n' % num_unique_sam_lines);
+
+	num_mapped = 0;
+	num_mapped_unique = 0;
+
+	num_qnames_in_sam_file = len(hashed_sam.keys());
+
+	for sam_lines in hashed_sam.values():
+		for sam_line in sam_lines:
+			if (sam_line.IsMapped() == True):
+				num_mapped += 1;
+
+		if (sam_lines[0].IsMapped() == True):
+			num_mapped_unique += 1;
+
+	sys.stdout.write('Mapped lines: %d / %d (%.2f%%)\n' % (num_mapped, num_sam_lines, float(num_mapped) / float(num_sam_lines) * 100.0));
+	sys.stdout.write('Unique mapped lines: %d / %d (%.2f%%)\n' % (num_mapped_unique, num_qnames_in_sam_file, float(num_mapped_unique) / float(num_qnames_in_sam_file) * 100.0));
+	if (reads_fastq != ''):
+		sys.stdout.write('Mapped reads: %d / %d ( %.2f%%)\n' % (num_mapped_unique, len(read_qnames), float(num_mapped_unique) / float(len(read_qnames)) * 100.0));
+
 
 
 if __name__ == "__main__":
