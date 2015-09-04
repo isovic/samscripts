@@ -1136,7 +1136,7 @@ def sam_stats(sam_file, reads_fastq=''):
 		read_qnames = get_fastq_headers(reads_fastq);
 
 	sys.stdout.write('Number of SAM lines in file: %d\n' % num_sam_lines);
-	sys.stdout.write('Number of SAM lines with unique qname: %d\n' % num_unique_sam_lines);
+	# sys.stdout.write('Number of SAM lines with unique qname: %d\n' % num_unique_sam_lines);
 
 	num_mapped = 0;
 	num_mapped_unique = 0;
