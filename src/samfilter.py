@@ -1156,6 +1156,102 @@ def sam_stats(sam_file, reads_fastq=''):
 	if (reads_fastq != ''):
 		sys.stdout.write('Mapped reads: %d / %d ( %.2f%%)\n' % (num_mapped_unique, len(read_qnames), float(num_mapped_unique) / float(len(read_qnames)) * 100.0));
 
+def generate_AS(sam_file, reference_file, match_score, mismatch_penalty, gap_open_penalty, gap_extend_penalty, out_filtered_sam_file):
+	fp_in = None;
+	fp_out = None;
+	
+	try:
+		fp_in = open(sam_file, 'r');
+	except IOError:
+		sys.stderr.write('[%s] ERROR: Could not open file "%s" for reading!' % (__name__, sam_file));
+		exit(1);
+	
+	try:
+		fp_out = open(out_filtered_sam_file, 'w');
+	except IOError:
+		sys.stderr.write('[%s] ERROR: Could not open file "%s" for writing!' % (__name__, out_filtered_sam_file));
+		exit(1);
+
+	[ref_headers, ref_seqs, ref_quals] = fastqparser.read_fastq(reference_file);
+	# [headers, seqs, quals] = fastqparser.read_fastq(fastq_file);
+	ref_header_hash = {};
+	i = 0;
+	for header in ref_headers:
+		ref_header_hash[header] = i;
+		ref_header_hash[header.split(' ')[0]] = i;
+		i += 1;
+
+	num_accepted = 0;
+	num_rejected = 0;
+	num_unmapped = 0;
+	
+	i = 0;
+	for line in fp_in:
+		line = line.strip();
+		if (len(line) == 0 or line[0] == '@' or (('AS:i:' in line) and ('NM:i:' in line))):
+		# if (len(line) == 0 or line[0] == '@'):
+			fp_out.write(line + '\n');
+			continue;
+
+		i += 1;
+		sys.stderr.write('\rLine %d, num_accepted: %d, num_rejected: %d' % (i, num_accepted, num_rejected));
+
+		sam_line = utility_sam.SAMLine(line.rstrip());
+
+		if (sam_line.IsMapped() == False):
+			fp_out.write(line + '\n');
+			num_unmapped += 1;
+
+		rname = sam_line.rname;
+		try:
+			ref_id = ref_header_hash[rname];
+		except:
+			sys.stderr.write('Warning: Could not find reference "%s"! Skipping alignment.\n' % (rname));
+			fp_out.write(line + '\n');
+			num_rejected += 1;
+			continue;
+
+		AS = 0;
+		NM = 0;
+
+		clip_start = sam_line.clip_count_front if (sam_line.clip_op_front == 'H') else 0;
+		cigar_pos_list = sam_line.CalcCigarStartingPositions(separate_matches_in_individual_bases=True);
+		for cigar_pos_info in cigar_pos_list:
+			[cigar_count, cigar_op, pos_on_reference, pos_on_read] = cigar_pos_info;
+			if (cigar_op == 'M'):
+				if (sam_line.seq[pos_on_read - clip_start] == ref_seqs[ref_id][pos_on_reference]):
+					AS += match_score;
+				else:
+					AS += mismatch_penalty;
+					NM += 1;
+			elif (cigar_op in 'ID'):
+				AS += (gap_open_penalty + (cigar_count - 1) * gap_extend_penalty);
+				NM += cigar_count;
+
+		out_line = line;
+		if (('AS:i:' in line) == False):
+			out_line += '\tAS:i:%d' % (AS);
+		if (('NM:i:' in line) == False):
+			out_line += '\tNM:i:%d' % (NM);
+		# if (sam_line.evalue <= threshold):
+		# fp_out.write('%s\tAS:i:%d\tNM:i:%d\n' % (line, AS, NM));
+		fp_out.write(out_line + '\n');
+		num_accepted += 1;
+		# else:
+		# 	num_rejected += 1;
+	
+	fp_in.close();
+	fp_out.close();
+	
+	sys.stderr.write('\n');
+	sys.stderr.write('Done!\n');
+	try:
+		sys.stderr.write('num_accepted = %d (%.2f%%)\n' % (num_accepted, (float(num_accepted) / float(num_accepted + num_rejected)) * 100.0));
+		sys.stderr.write('num_rejected = %d (%.2f%%)\n' % (num_rejected, (float(num_rejected) / float(num_accepted + num_rejected)) * 100.0));
+		sys.stderr.write('num_unmapped = %d (%.2f%%)\n' % (num_unmapped, (float(num_unmapped) / float(num_accepted + num_rejected)) * 100.0));
+	except:
+		pass;
+	
 
 
 if __name__ == "__main__":
@@ -1182,6 +1278,7 @@ if __name__ == "__main__":
 		sys.stderr.write('\t2d\n');
 		sys.stderr.write('\tstats\n');
 		sys.stderr.write('\toutofbounds\n');
+		sys.stderr.write('\tgenerateAS\n');
 		exit(0);
 
 	if (sys.argv[1] == 'mapq'):
@@ -1505,6 +1602,22 @@ if __name__ == "__main__":
 			sys.stderr.write('ERROR: Output and input files are the same!\n');
 			exit(0);
 		filter_out_of_bounds(sam_file, out_filtered_sam_file, out_rejected_sam_file);
+		exit(0);
+
+	elif (sys.argv[1] == 'generateAS'):
+		if (len(sys.argv) != 5):
+			sys.stderr.write('Calculates a simple alignment score if not previously present, using a model [1, -1, -1, -1].\n');
+			sys.stderr.write('Usage:\n');
+			sys.stderr.write('\t%s %s <reference_file> <input_sam_file> <out_filtered_sam_file>\n' % (sys.argv[0], sys.argv[1]));
+			exit(0);
+
+		reference_file = sys.argv[2];
+		sam_file = sys.argv[3];
+		out_filtered_sam_file = sys.argv[4];
+		if (sam_file == out_filtered_sam_file):
+			sys.stderr.write('ERROR: Output and input files are the same!\n');
+			exit(0);
+		generate_AS(sam_file, reference_file, 1, -1, -1, -1, out_filtered_sam_file);
 		exit(0);
 
 	else:
