@@ -172,6 +172,26 @@ def count_seq_length(fastq_path):
 	
 	return [ret_string, num_seqs, total_seq_len, average_seq_len];
 
+def get_headers_and_lengths(fastq_path):
+	headers = [];
+	lengths = [];
+	fp_in = None;
+	try:
+		fp_in = open(fastq_path, 'r');
+	except IOError:
+		print 'ERROR: Could not open file "%s" for reading!' % fastq_path;
+		exit(1);
+	seq_id = 0;
+	while True:
+		[header, read] = get_single_read(fp_in);
+		if (len(header) == 0):
+			break;
+		headers.append(header);
+		lengths.append(len(read[1]));
+		seq_id += 1;
+	fp_in.close();
+	return [headers, lengths];
+
 def complement_base(base):
 	if (base == 'A'):
 		return 'T';
