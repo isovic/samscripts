@@ -801,8 +801,8 @@ def filter_1d_2d(is_1d_or_2d, sam_file, out_filtered_sam_file):
 		# sam_line = utility_sam.SAMLine(line.rstrip());
 		split_line = line.rstrip().split('\t');
 		qname = split_line[0].lower();
-		if ((is_1d_or_2d == '1d' and ((('twodir' in qname) == False and ('-2d' in qname) == False) or ('-1d' in qname) == True)) or
-			(is_1d_or_2d == '2d' and (('twodir' in qname) == True or ('-2d' in qname) == True))):
+		if ((is_1d_or_2d == '1d' and ((('twodir' in qname) == False and ('-2d' in qname) == False and ('_2d' in qname) == False) or ('-1d' in qname) == True or ('_1d' in qname) == True)) or
+			(is_1d_or_2d == '2d' and (('twodir' in qname) == True or ('-2d' in qname) == True or ('_2d' in qname) == True))):
 
 			fp_out.write(line);
 			num_accepted += 1;
