@@ -143,7 +143,7 @@ def process_mpileup_line(line, line_number, ret_variant_list, ret_vcf_list, ret_
 			pass;
 		#variant_line = 'undercovered1\tpos = %s\tcoverage = %d\tnon_indel_cov_curr = %d\tmost_common_base_count = %d\tref_base = %s\tcons_base = %s\tbase_counts = %s\tinsertion_counts = %s\tdeletion_counts = %s\t%s' % (position, int(coverage), non_indel_coverage_current_base, most_common_base_count, ref_base, sorted_base_counts[-1][0], str(sorted_base_counts), str(insertion_event_counts), str(deletion_event_counts), line.strip());
 		#ret_variant_list.append(variant_line);
-		variant_line = 'undercovered1\tpos = %s\tcoverage = %d\tbase_counts = %s\tinsertion_counts = %s\tdeletion_counts = %s' % (position, int(coverage), str(sorted_base_counts), str(insertion_event_counts), str(deletion_event_counts));
+		variant_line = 'undercovered1\tpos = %s\tref = %s\tcoverage = %d\tbase_counts = %s\tinsertion_counts = %s\tdeletion_counts = %s' % (position, ref_name, int(coverage), str(sorted_base_counts), str(insertion_event_counts), str(deletion_event_counts));
 		ret_variant_list.append(variant_line);
 		
 	else:
@@ -179,14 +179,18 @@ def process_mpileup_line(line, line_number, ret_variant_list, ret_vcf_list, ret_
 		if (is_good == False):
 			ret_snp_count[0] += 1;
 #			ret_variant_list.append(line_number);
-			variant_line = 'SNP\tpos = %s\tcoverage = %d\tnon_indel_cov_curr = %d\tmost_common_base_count = %d\tref_base = %s\tcons_base = %s\tbase_counts = %s\tinsertion_counts = %s\tdeletion_counts = %s\t%s' % (position, int(coverage), non_indel_coverage_current_base, most_common_base_count, ref_base, ('{}') if (len(sorted_base_counts) == 0) else (str(sorted_base_counts[-1][0])), str(sorted_base_counts), str(insertion_event_counts), str(deletion_event_counts), line.strip());
+			variant_line = 'SNP\tpos = %s\tref = %s\tcoverage = %d\tnon_indel_cov_curr = %d\tmost_common_base_count = %d\tref_base = %s\tcons_base = %s\tbase_counts = %s\tinsertion_counts = %s\tdeletion_counts = %s\t%s' % (position, ref_name, int(coverage), non_indel_coverage_current_base, most_common_base_count, ref_base, ('{}') if (len(sorted_base_counts) == 0) else (str(sorted_base_counts[-1][0])), str(sorted_base_counts), str(insertion_event_counts), str(deletion_event_counts), line.strip());
 			ret_variant_list.append(variant_line);
 			
+			### VCF output ###
 			alt_base = ('{}') if (len(sorted_base_counts) == 0) else (str(sorted_base_counts[-1][0]));
 			qual = 1000;
-			info = 'DP=%s' % (coverage);
-			vcf_line = '%s\t%s\t.\t%s\t%s\t%d\tPASS\t%s' % (ref_name, position, ref_base, alt_base, qual, info);
+			info = 'DP=%s;TYPE=snp' % (coverage);
+			ref_field = ref_base;
+			alt_field = alt_base;
+			vcf_line = '%s\t%s\t.\t%s\t%s\t%d\tPASS\t%s' % (ref_name, position, ref_field, alt_field, qual, info);
 			ret_vcf_list.append(vcf_line);
+			##################
 			
 		else:
 			ret_num_correct_bases[0] += 1;
@@ -245,8 +249,20 @@ def process_mpileup_line(line, line_number, ret_variant_list, ret_vcf_list, ret_
 				except:
 					temp_sorted_bc = 0;
 				
-				variant_line = 'ins\tpos = %s\tnon_indel_cov_next = %d\tnon_indel_cov_curr = %d\tmost_common_insertion_count = %d\tref_base = %s\tcons_base = %s\tbase_counts = %s\tinsertion_counts = %s\tdeletion_counts = %s\t%s' % (position, non_indel_coverage_next_base, non_indel_coverage_current_base, most_common_insertion_count, ref_base, temp_sorted_bc, str(sorted_base_counts), str(insertion_event_counts), str(deletion_event_counts), line.strip());
+				indel_length = most_common_insertion_length;
+				variant_line = 'ins\tpos = %s\tref = %s\tnon_indel_cov_next = %d\tnon_indel_cov_curr = %d\tmost_common_insertion_count = %d\tref_base = %s\tcons_base = %s\tbase_counts = %s\tinsertion_counts = %s\tdeletion_counts = %s\t%s' % (position, ref_name, non_indel_coverage_next_base, non_indel_coverage_current_base, most_common_insertion_count, ref_base, temp_sorted_bc, str(sorted_base_counts), str(insertion_event_counts), str(deletion_event_counts), line.strip());
 				ret_variant_list.append(variant_line);
+
+				### Insertions in the VCF format specifies the position where a insertion occurs. The ref position should contain the base which is the same as ref, but the alt field contains the ref base + the insertion event.
+				### VCF output ###
+				alt_base = ('{}') if (len(sorted_base_counts) == 0) else (str(sorted_base_counts[-1][0]));
+				qual = 1000;
+				info = 'DP=%s;TYPE=ins' % (coverage);
+				ref_field = ref_base;
+				alt_field = '%s%s' % (ref_base, sorted_insertion_counts[-1][0]);
+				vcf_line = '%s\t%s\t.\t%s\t%s\t%d\tPASS\t%s' % (ref_name, position, ref_field, alt_field, qual, info);
+				ret_vcf_list.append(vcf_line);
+				##################
 				
 		elif (most_common_deletion_count > most_common_insertion_count and most_common_deletion_count > non_indel_coverage_next_base):
 			# In this case, deletions are a clear winner.
@@ -256,8 +272,19 @@ def process_mpileup_line(line, line_number, ret_variant_list, ret_vcf_list, ret_
 				#variant_line = 'deletion\t%d\t%s\t%s\t%s\t%s' % (most_common_deletion_count, str(sorted_base_counts), str(insertion_event_counts), str(deletion_event_counts), line.strip());
 				#ret_variant_list.append(variant_line);
 				#return most_common_deletion_length;
-				variant_line = 'del\tpos = %s\tnon_indel_cov_next = %d\tnon_indel_cov_curr = %d\tmost_common_deletion_count = %d\tref_base = %s\tcons_base = %s\tbase_counts = %s\tinsertion_counts = %s\tdeletion_counts = %s\t%s' % (position, non_indel_coverage_next_base, non_indel_coverage_current_base, most_common_deletion_count, ref_base, sorted_base_counts[-1][0], str(sorted_base_counts), str(insertion_event_counts), str(deletion_event_counts), line.strip());
+				variant_line = 'del\tpos = %s\tref = %s\tnon_indel_cov_next = %d\tnon_indel_cov_curr = %d\tmost_common_deletion_count = %d\tref_base = %s\tcons_base = %s\tbase_counts = %s\tinsertion_counts = %s\tdeletion_counts = %s\t%s' % (position, ref_name, non_indel_coverage_next_base, non_indel_coverage_current_base, most_common_deletion_count, ref_base, sorted_base_counts[-1][0], str(sorted_base_counts), str(insertion_event_counts), str(deletion_event_counts), line.strip());
 				ret_variant_list.append(variant_line);
+
+				### Deletions in the VCF format specifies the position where a deletion occurs, with the first base being non-deletion, and the following bases being a deletion event.
+				### VCF output ###
+				alt_base = ('{}') if (len(sorted_base_counts) == 0) else (str(sorted_base_counts[-1][0]));
+				qual = 1000;
+				info = 'DP=%s;TYPE=del' % (coverage);
+				ref_field = '%s%s' % (ref_base, sorted_deletion_counts[-1][0]);
+				alt_field = ref_base;
+				vcf_line = '%s\t%s\t.\t%s\t%s\t%d\tPASS\t%s' % (ref_name, position, ref_field, alt_field, qual, info);
+				ret_vcf_list.append(vcf_line);
+				##################
 		else:
 			# In this case, either the base count consensus wins, or the
 			# insertion/deletion count is ambiguous.
@@ -298,6 +325,7 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 		fp_vcf.write('##source=%s\n' % (' '.join(sys.argv)));
 		fp_vcf.write('##reference=%s\n' % reference_path);
 		fp_vcf.write('##INFO=<ID=DP,Number=1,Type=Integer,Description="Raw Depth">\n');
+		fp_vcf.write('##INFO=<ID=TYPE,Number=A,Type=String,Description="Type of each allele (snp, ins, del, mnp, complex)">\n');
 		fp_vcf.write('##INFO=<ID=AF,Number=1,Type=Float,Description="Allele Frequency">\n');
 		fp_vcf.write('##INFO=<ID=SB,Number=1,Type=Integer,Description="Phred-scaled strand bias at this position">\n');
 		fp_vcf.write('##INFO=<ID=DP4,Number=4,Type=Integer,Description="Counts for ref-forward bases, ref-reverse, alt-forward and alt-reverse bases">\n');
