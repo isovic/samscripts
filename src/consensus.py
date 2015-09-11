@@ -177,20 +177,25 @@ def process_mpileup_line(line, line_number, ret_variant_list, ret_vcf_list, ret_
 					is_good = True;
 					break;
 		if (is_good == False):
-			ret_snp_count[0] += 1;
-#			ret_variant_list.append(line_number);
-			variant_line = 'SNP\tpos = %s\tref = %s\tcoverage = %d\tnon_indel_cov_curr = %d\tmost_common_base_count = %d\tref_base = %s\tcons_base = %s\tbase_counts = %s\tinsertion_counts = %s\tdeletion_counts = %s\t%s' % (position, ref_name, int(coverage), non_indel_coverage_current_base, most_common_base_count, ref_base, ('{}') if (len(sorted_base_counts) == 0) else (str(sorted_base_counts[-1][0])), str(sorted_base_counts), str(insertion_event_counts), str(deletion_event_counts), line.strip());
-			ret_variant_list.append(variant_line);
-			
-			### VCF output ###
-			alt_base = ('{}') if (len(sorted_base_counts) == 0) else (str(sorted_base_counts[-1][0]));
-			qual = 1000;
-			info = 'DP=%s;TYPE=snp' % (coverage);
-			ref_field = ref_base;
-			alt_field = alt_base;
-			vcf_line = '%s\t%s\t.\t%s\t%s\t%d\tPASS\t%s' % (ref_name, position, ref_field, alt_field, qual, info);
-			ret_vcf_list.append(vcf_line);
-			##################
+			if (len(sorted_base_counts) > 0):
+				ret_snp_count[0] += 1;
+	#			ret_variant_list.append(line_number);
+				variant_line = 'SNP\tpos = %s\tref = %s\tcoverage = %d\tnon_indel_cov_curr = %d\tmost_common_base_count = %d\tref_base = %s\tcons_base = %s\tbase_counts = %s\tinsertion_counts = %s\tdeletion_counts = %s\t%s' % (position, ref_name, int(coverage), non_indel_coverage_current_base, most_common_base_count, ref_base, ('{}') if (len(sorted_base_counts) == 0) else (str(sorted_base_counts[-1][0])), str(sorted_base_counts), str(insertion_event_counts), str(deletion_event_counts), line.strip());
+				ret_variant_list.append(variant_line);
+				
+				### VCF output ###
+				alt_base = ('{}') if (len(sorted_base_counts) == 0) else (str(sorted_base_counts[-1][0]));
+				qual = 1000;
+				info = 'DP=%s;TYPE=snp' % (coverage);
+				ref_field = ref_base;
+				alt_field = alt_base;
+				vcf_line = '%s\t%s\t.\t%s\t%s\t%d\tPASS\t%s' % (ref_name, position, ref_field, alt_field, qual, info);
+				ret_vcf_list.append(vcf_line);
+				##################
+			else:
+				sys.stderr.write('\nWarning: a SNP was detected, but there were no bases in the sorted_base_counts!')
+				variant_line = 'SNP\tpos = %s\tref = %s\tcoverage = %d\tnon_indel_cov_curr = %d\tmost_common_base_count = %d\tref_base = %s\tcons_base = %s\tbase_counts = %s\tinsertion_counts = %s\tdeletion_counts = %s\t%s' % (position, ref_name, int(coverage), non_indel_coverage_current_base, most_common_base_count, ref_base, ('{}') if (len(sorted_base_counts) == 0) else (str(sorted_base_counts[-1][0])), str(sorted_base_counts), str(insertion_event_counts), str(deletion_event_counts), line.strip());
+				sys.stderr.write('\n');
 			
 		else:
 			ret_num_correct_bases[0] += 1;
@@ -298,7 +303,7 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 		fp = open(mpileup_path, 'r');
 	except IOError:
 		sys.stderr.write('ERROR: Could not open file "%s" for reading!\n' % mpileup_path);
-		return;
+		return None;
 	
 	ret_variant_list = [];
 	ret_vcf_list = [];
@@ -315,6 +320,9 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 	fp_variant = None;
 	fp_vcf = None;
 	if (output_prefix != ''):
+		if (not os.path.exists(os.path.dirname(output_prefix))):
+			os.makedirs(os.path.dirname(output_prefix));
+
 		variant_file = ('%s-cov_%d.variant.csv' % (output_prefix, coverage_threshold));
 		fp_variant = open(variant_file, 'w');
 
@@ -438,8 +446,12 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 			fp_sum = open(summary_file, 'w');
 			fp_sum.write(summary_lines);
 			fp_sum.close();
+			return summary_file;
 		except IOError:
 			sys.stderr.write('ERROR: Could not open file "%s" for writing!\n' % (summary_file));
+			return None;
+
+	return None;
 
 def main(alignments_path, reference_path, coverage_threshold, output_prefix, thread_id=0, bed_position=""):
 	# Sanity checking the existence of the file, and the correctness of its extension.
@@ -478,9 +490,9 @@ def main(alignments_path, reference_path, coverage_threshold, output_prefix, thr
 	sys.stderr.write('Processing file "%s"...\n' % alignments_path);
 	sys.stderr.write('Reference file "%s"...\n' % reference_path);
 	sys.stderr.write('Coverage threshold: %d\n' % coverage_threshold);
-	process_mpileup(alignments_path, reference_path, ('%s.mpileup' % alignments_path_bam), coverage_threshold, output_prefix, thread_id, bed_position);
+	summary_file = process_mpileup(alignments_path, reference_path, ('%s.mpileup' % alignments_path_bam), coverage_threshold, output_prefix, thread_id, bed_position);
 
-def CollectSummaries(sam_files, collective_output_file):
+def CollectSummaries(sam_files, prefix_for_intermediate_results, collective_output_file):
 	fp_collect = None;
 	
 	try:
@@ -490,7 +502,7 @@ def CollectSummaries(sam_files, collective_output_file):
 		return;
 	
 	for sam_file in sam_files:
-		summary_file = os.path.splitext(sam_file)[0] + '.conssum';
+		summary_file = prefix_for_intermediate_results + '.sum';
 		
 		try:
 			fp_sum = open(summary_file, 'r');
@@ -533,5 +545,5 @@ if __name__ == "__main__":
 		output_prefix = os.path.splitext(sam_file)[0];
 	main(sam_file, reference_file, coverage_threshold, output_prefix, 0, bed_position);
 
-	if (output_prefix != '-'):
-		CollectSummaries([sam_file], output_prefix + '.variant.sum');
+	# if (output_prefix != '-'):
+	# 	CollectSummaries([sam_file], output_prefix, output_prefix + '.variant.sum');
