@@ -289,7 +289,30 @@ def filter_for_marginalign(input_fastq_path, out_fastq_path, fp_out):
 	sys.stderr.write('\n');
 	fp_in.close();
 
+def wrap_fastq_file(input_fastq_path, wrap_length, out_fastq_path, fp_out):
+	try:
+		fp_in = open(input_fastq_path, 'r');
+	except:
+		sys.stderr.write('ERROR: Could not open file "%s" for reading! Exiting.\n' % input_fastq_path);
+		exit(0);
 
+	current_read = 0;
+
+	while True:
+		[header, read] = fastqparser.get_single_read(fp_in);
+		
+		if (len(read) == 0):
+			break;
+
+		current_read += 1;
+
+		read[1] = re.sub("(.{%d})"%(wrap_length), "\\1\n", read[1], 0, re.DOTALL);	### Wrap the sequence line, because DALIGNER has a 9998bp line len limit.
+		if (len(read) == 4):
+			read[3] = re.sub("(.{%d})"%(wrap_length), "\\1\n", read[3], 0, re.DOTALL);	### Wrap the qual line, because DALIGNER has a 9998bp line len limit.
+		fp_out.write('\n'.join(read) + '\n');
+
+	sys.stderr.write('\n');
+	fp_in.close();
 
 if __name__ == "__main__":
 	if (len(sys.argv) < 2):
@@ -304,6 +327,8 @@ if __name__ == "__main__":
 		sys.stderr.write('\thardclip\n');
 		sys.stderr.write('\tspecialchars\n');
 		sys.stderr.write('\tmarginalign\n');
+		sys.stderr.write('\twrap\n');
+
 		exit(0);
 
 	if (sys.argv[1] == 'header'):
@@ -522,6 +547,36 @@ if __name__ == "__main__":
 				exit(0);
 
 		filter_for_marginalign(input_fastq_path, out_fastq_path, fp_out);
+
+		if (fp_out != sys.stdout):
+			fp_out.close();
+
+		exit(0);
+
+	elif (sys.argv[1] == 'wrap'):
+		if (len(sys.argv) < 4 or len(sys.argv) > 5):
+			sys.stderr.write('Wraps FASTA/FASTQ files to have line length up to a given number of characters.\n');
+			sys.stderr.write('Usage:\n');
+			sys.stderr.write('\t%s %s line_length <input_fastq_file> [<out_filtered_fastq_file>]\n' % (os.path.basename(sys.argv[0]), sys.argv[1]));
+			exit(0);
+
+		wrap_length = int(sys.argv[2]);
+		input_fastq_path = sys.argv[3];
+
+		out_fastq_path = '';
+		fp_out = sys.stdout;
+		if (len(sys.argv) == 5):
+			out_fastq_path = sys.argv[4];
+			if (input_fastq_path == out_fastq_path):
+				sys.stderr.write('ERROR: Output and input files are the same! Exiting.\n');
+				exit(0);
+			try:
+				fp_out = open(out_fastq_path, 'w');
+			except Exception, e:
+				sys.stderr.write(str(e));
+				exit(0);
+
+		wrap_fastq_file(input_fastq_path, wrap_length, out_fastq_path, fp_out)
 
 		if (fp_out != sys.stdout):
 			fp_out.close();
