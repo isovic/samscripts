@@ -420,6 +420,9 @@ def analyze_single_sam(mode_code, sam_file, reference_file, reads_file, simulate
 
 	fp.close();
 
+	csv_header += 'Coverage threshold';
+	csv_line += '%d\t' % (consensus_coverage_threshold);
+
 	csv_header = csv_header.strip();
 	csv_line = csv_line.strip();
 
