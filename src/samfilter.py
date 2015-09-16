@@ -293,8 +293,8 @@ def filter_qnames(sam_file, pattern_file, include_or_exclude, sam_parameter_to_c
 		elif (include_or_exclude == 'exclude'):
 			is_current_accepted = False;
 			for pattern in patterns:
-				if ((sam_parameter_to_compare == 'qname' and pattern.lower() in sam_line.qname.lower()) or
-					(sam_parameter_to_compare == 'rname' and pattern.lower() in sam_line.rname.lower())):
+				if ((sam_parameter_to_compare == 'nqname' and pattern.lower() in sam_line.qname.lower()) or
+					(sam_parameter_to_compare == 'nrname' and pattern.lower() in sam_line.rname.lower())):
 					is_current_accepted = True;
 					break;
 			if (is_current_accepted == False):
