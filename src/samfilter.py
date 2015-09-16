@@ -1470,7 +1470,7 @@ if __name__ == "__main__":
 		if (sam_file == out_filtered_sam_file):
 			sys.stderr.write('ERROR: Output and input files are the same!\n');
 			exit(0);
-		filter_qnames(sam_file, patterns_file, False, sys.argv[1], out_filtered_sam_file);
+		filter_qnames(sam_file, patterns_file, 'exclude', sys.argv[1], out_filtered_sam_file);
 		exit(0);
 
 	elif (sys.argv[1] == 'uniquebest'):
