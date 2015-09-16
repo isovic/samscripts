@@ -232,7 +232,7 @@ def filter_sam_by_evalue(sam_file, threshold, out_filtered_sam_file):
 	sys.stderr.write('num_unmapped = %d (%.2f%%)\n' % (num_unmapped, (float(num_unmapped) / float(num_accepted + num_rejected)) * 100.0));
 
 
-def filter_qnames(sam_file, pattern_file, sam_parameter_to_compare, out_filtered_sam_file):
+def filter_qnames(sam_file, pattern_file, include_or_exclude, sam_parameter_to_compare, out_filtered_sam_file):
 	fp_in = None;
 	fp_patterns = None;
 	fp_out = None;
@@ -272,22 +272,37 @@ def filter_qnames(sam_file, pattern_file, sam_parameter_to_compare, out_filtered
 		
 		sam_line = utility_sam.SAMLine(line.rstrip());
 
-		is_current_accepted = False;
-		for pattern in patterns:
-			if ((sam_parameter_to_compare == 'qname' and pattern.lower() in sam_line.qname.lower()) or
-				(sam_parameter_to_compare == 'rname' and pattern.lower() in sam_line.rname.lower())):
+		if (include_or_exclude == 'include'):
+			is_current_accepted = False;
+			for pattern in patterns:
+				if ((sam_parameter_to_compare == 'qname' and pattern.lower() in sam_line.qname.lower()) or
+					(sam_parameter_to_compare == 'rname' and pattern.lower() in sam_line.rname.lower())):
 
+					fp_out.write(line);
+					num_accepted += 1;
+					is_current_accepted = True;
+					break;
+				# else:
+					# print 'Tu sam 1!';
+					# print pattern;
+					# print sam_line.qname;
+					# print sam_line.rname;
+			if (is_current_accepted == False):
+				num_rejected += 1;
+
+		elif (include_or_exclude == 'exclude'):
+			is_current_accepted = False;
+			for pattern in patterns:
+				if ((sam_parameter_to_compare == 'qname' and pattern.lower() in sam_line.qname.lower()) or
+					(sam_parameter_to_compare == 'rname' and pattern.lower() in sam_line.rname.lower())):
+					is_current_accepted = True;
+					break;
+			if (is_current_accepted == False):
 				fp_out.write(line);
 				num_accepted += 1;
 				is_current_accepted = True;
-				break;
-			# else:
-				# print 'Tu sam 1!';
-				# print pattern;
-				# print sam_line.qname;
-				# print sam_line.rname;
-		if (is_current_accepted == False):
-			num_rejected += 1;
+			else:				
+				num_rejected += 1;
 	
 	fp_in.close();
 	fp_out.close();
@@ -1344,6 +1359,8 @@ if __name__ == "__main__":
 		sys.stderr.write('\twrongcigars\n');
 		sys.stderr.write('\tqname\n');
 		sys.stderr.write('\trname\n');
+		sys.stderr.write('\tnqname\n');
+		sys.stderr.write('\tnrname\n');
 		sys.stderr.write('\tuniquebest\n');
 		sys.stderr.write('\tmapped\n');
 		sys.stderr.write('\tmappedqnames\n');
@@ -1437,7 +1454,23 @@ if __name__ == "__main__":
 		if (sam_file == out_filtered_sam_file):
 			sys.stderr.write('ERROR: Output and input files are the same!\n');
 			exit(0);
-		filter_qnames(sam_file, patterns_file, sys.argv[1], out_filtered_sam_file);
+		filter_qnames(sam_file, patterns_file, 'include', sys.argv[1], out_filtered_sam_file);
+		exit(0);
+
+	elif (sys.argv[1] == 'nqname' or sys.argv[1] == 'nrname'):
+		if (len(sys.argv) != 5):
+			sys.stderr.write('Takes in a SAM file and a file containing qname patterns (one pattern in one line). Outputs all sam lines *not* containing a pattern.\n');
+			sys.stderr.write('Usage:\n');
+			sys.stderr.write('\t%s %s <input_patterns_file> <input_sam_file> <out_filtered_sam_file>\n' % (sys.argv[0], sys.argv[1]));
+			exit(0);
+
+		patterns_file = sys.argv[2];
+		sam_file = sys.argv[3];
+		out_filtered_sam_file = sys.argv[4];
+		if (sam_file == out_filtered_sam_file):
+			sys.stderr.write('ERROR: Output and input files are the same!\n');
+			exit(0);
+		filter_qnames(sam_file, patterns_file, False, sys.argv[1], out_filtered_sam_file);
 		exit(0);
 
 	elif (sys.argv[1] == 'uniquebest'):
