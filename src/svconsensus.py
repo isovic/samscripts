@@ -187,7 +187,7 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 	fp_vcf = None;
 	if (not os.path.exists(os.path.dirname(out_file))):
 		sys.stderr.write('Creating the output folder: "%s".\n' % (os.path.dirname(out_file)));
-		os.path.makedirs(os.path.dirname(out_file));
+		os.makedirs(os.path.dirname(out_file));
 
 	fp_out = open(out_file, 'w');
 	# if (output_prefix != ''):
