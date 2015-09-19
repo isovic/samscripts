@@ -185,6 +185,10 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 	
 	fp_variant = None;
 	fp_vcf = None;
+	if (not os.path.exists(os.path.dirname(out_file))):
+		sys.stderr.write('Creating the output folder: "%s".\n' % (os.path.dirname(out_file)));
+		os.path.makedirs(os.path.dirname(out_file));
+
 	fp_out = open(out_file, 'w');
 	# if (output_prefix != ''):
 		# variant_file = ('%s-cov_%d.variant.csv' % (output_prefix, coverage_threshold));
@@ -515,7 +519,7 @@ def chain_events(events_path):
 	# for event in chained_events:
 	# 	sys.stderr.write(event.csv_line() + '\n');
 
-	fp = open(events_path + '.1.csv', 'w');
+	fp = open(events_path + '.chained.csv', 'w');
 	fp.write(labels + '\n');
 	fp.write('\n'.join([event.csv_line() for event in chained_events]));
 	fp.write('\n');

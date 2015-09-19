@@ -337,6 +337,30 @@ def convert_to_uppercase(input_fastq_path, out_fastq_path, fp_out):
 	sys.stderr.write('\n');
 	fp_in.close();
 
+def enumerate_headers(input_fastq_path, out_fastq_path, fp_out):
+	try:
+		fp_in = open(input_fastq_path, 'r');
+	except:
+		sys.stderr.write('ERROR: Could not open file "%s" for reading! Exiting.\n' % input_fastq_path);
+		exit(0);
+
+	current_read = 0;
+
+	while True:
+		[header, read] = fastqparser.get_single_read(fp_in);
+		
+		if (len(read) == 0):
+			break;
+
+		current_read += 1;
+
+		# read[1] = read[1].upper();
+		read[0] = read[0][0] + str(current_read);
+		fp_out.write('\n'.join(read) + '\n');
+
+	sys.stderr.write('\n');
+	fp_in.close();
+
 
 
 if __name__ == "__main__":
@@ -354,6 +378,7 @@ if __name__ == "__main__":
 		sys.stderr.write('\tmarginalign\n');
 		sys.stderr.write('\twrap\n');
 		sys.stderr.write('\ttouppercase\n');
+		sys.stderr.write('\tenumerate\n');
 
 		exit(0);
 
@@ -632,6 +657,35 @@ if __name__ == "__main__":
 				exit(0);
 
 		convert_to_uppercase(input_fastq_path, out_fastq_path, fp_out)
+
+		if (fp_out != sys.stdout):
+			fp_out.close();
+
+		exit(0);
+
+	elif (sys.argv[1] == 'enumerate'):
+		if (len(sys.argv) < 4 or len(sys.argv) > 4):
+			sys.stderr.write('Replace headers of FASTQ sequences with their ordinal numbers.\n');
+			sys.stderr.write('Usage:\n');
+			sys.stderr.write('\t%s %s <input_fastq_file> [<out_filtered_fastq_file>]\n' % (os.path.basename(sys.argv[0]), sys.argv[1]));
+			exit(0);
+
+		input_fastq_path = sys.argv[2];
+
+		out_fastq_path = '';
+		fp_out = sys.stdout;
+		if (len(sys.argv) == 4):
+			out_fastq_path = sys.argv[3];
+			if (input_fastq_path == out_fastq_path):
+				sys.stderr.write('ERROR: Output and input files are the same! Exiting.\n');
+				exit(0);
+			try:
+				fp_out = open(out_fastq_path, 'w');
+			except Exception, e:
+				sys.stderr.write(str(e));
+				exit(0);
+
+		enumerate_headers(input_fastq_path, out_fastq_path, fp_out)
 
 		if (fp_out != sys.stdout):
 			fp_out.close();
