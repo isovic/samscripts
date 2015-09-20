@@ -415,8 +415,12 @@ def filter_uniqe_best(sam_file, out_filtered_sam_file, out_rejected_file=None):
 	# num_accepted = len(hashed_sam.keys());
 	# num_rejected = num_sam_lines - num_accepted;
 
-	sys.stderr.write('num_accepted = %d (%.2f%%)\n' % (num_accepted, (float(num_accepted) / float(num_accepted + num_rejected)) * 100.0));
-	sys.stderr.write('num_rejected = %d (%.2f%%)\n' % (num_rejected, (float(num_rejected) / float(num_accepted + num_rejected)) * 100.0));
+	try:
+		sys.stderr.write('num_accepted = %d (%.2f%%)\n' % (num_accepted, (float(num_accepted) / float(num_accepted + num_rejected)) * 100.0));
+		sys.stderr.write('num_rejected = %d (%.2f%%)\n' % (num_rejected, (float(num_rejected) / float(num_accepted + num_rejected)) * 100.0));
+	except:
+		sys.stderr.write('num_accepted = %d (0.00 %%)\n' % (num_accepted));
+		sys.stderr.write('num_rejected = %d (0.00 %%)\n' % (num_rejected));
 
 	if (fp_out != None):
 		fp_out.close();
