@@ -1351,6 +1351,88 @@ def marginalign_filter(sam_file, out_filtered_sam_file):
 	except:
 		pass;
 
+def fix_sam_hnames(sam_file, out_filtered_sam_file):
+	fp_in = None;
+	fp_out = None;
+	
+	try:
+		fp_in = open(sam_file, 'r');
+	except IOError:
+		sys.stderr.write('[%s] ERROR: Could not open file "%s" for reading!' % (__name__, sam_file));
+		exit(1);
+	
+	try:
+		fp_out = open(out_filtered_sam_file, 'w');
+	except IOError:
+		sys.stderr.write('[%s] ERROR: Could not open file "%s" for writing!' % (__name__, out_filtered_sam_file));
+		exit(1);
+
+	num_accepted = 0;
+	num_rejected = 0;
+	num_unmapped = 0;
+	
+	i = 0;
+	for line in fp_in:
+		line = line.strip();
+		if (len(line) == 0 or line[0] == '@'):
+			if (line.startswith('@SQ')):
+				split_line = line.split('\t');
+				found_hname = False;
+				for param in split_line:
+					if (param.startswith('SN:')):
+						hname = param.split(':')[-1];
+						new_hname = hname.split()[0];
+						sys.stderr.write('Found hname: "%s", replacing with: "%s".\n' % (hname, new_hname));
+						new_line = line.replace(hname, new_hname);
+						fp_out.write(new_line + '\n');
+						found_hname = True;
+						break;
+				if (found_hname == False):
+					fp_out.write(line + '\n');
+			else:
+				fp_out.write(line + '\n');
+			continue;
+
+		i += 1;
+		sys.stderr.write('\rLine %d, num_accepted: %d, num_rejected: %d' % (i, num_accepted, num_rejected));
+
+		sam_line = utility_sam.SAMLine(line.rstrip());
+		# split_line = line.split('\t');
+
+		if (sam_line.IsMapped() == False):
+			fp_out.write(line + '\n');
+			num_unmapped += 1;
+
+		qname = sam_line.qname;
+		rname = sam_line.rname;
+
+		new_line = line + '';
+
+		if (qname != '*'):
+#			new_qname = re.sub('[^0-9a-zA-Z]', '_', qname);
+			new_qname = qname.split()[0];
+			new_line = new_line.replace(qname, new_qname);
+
+		if (rname != '*'):
+#			new_rname = re.sub('[^0-9a-zA-Z]', '_', rname);
+			new_rname = rname.split()[0];
+			new_line = new_line.replace(rname, new_rname);
+
+		fp_out.write(new_line + '\n');
+		num_accepted += 1;
+
+	fp_in.close();
+	fp_out.close();
+	
+	sys.stderr.write('\n');
+	sys.stderr.write('Done!\n');
+	try:
+		sys.stderr.write('num_accepted = %d (%.2f%%)\n' % (num_accepted, (float(num_accepted) / float(num_accepted + num_rejected)) * 100.0));
+		sys.stderr.write('num_rejected = %d (%.2f%%)\n' % (num_rejected, (float(num_rejected) / float(num_accepted + num_rejected)) * 100.0));
+		sys.stderr.write('num_unmapped = %d (%.2f%%)\n' % (num_unmapped, (float(num_unmapped) / float(num_accepted + num_rejected)) * 100.0));
+	except:
+		pass;
+
 
 
 if __name__ == "__main__":
@@ -1380,6 +1462,8 @@ if __name__ == "__main__":
 		sys.stderr.write('\tstats\n');
 		sys.stderr.write('\toutofbounds\n');
 		sys.stderr.write('\tgenerateAS\n');
+		sys.stderr.write('\tmarginalign\n');
+		sys.stderr.write('\tfixhnames\n');
 		exit(0);
 
 	if (sys.argv[1] == 'mapq'):
@@ -1751,6 +1835,23 @@ if __name__ == "__main__":
 			exit(0);
 		marginalign_filter(sam_file, out_filtered_sam_file);
 		exit(0);
+
+	elif (sys.argv[1] == 'fixhnames'):
+		if (len(sys.argv) != 4):
+			sys.stderr.write('Changes the qnames and the rnames of alignments not to include special characters.\n');
+			sys.stderr.write('Usage:\n');
+			sys.stderr.write('\t%s %s <input_sam_file> <out_filtered_sam_file>\n' % (sys.argv[0], sys.argv[1]));
+			exit(0);
+
+		sam_file = sys.argv[2];
+		out_filtered_sam_file = sys.argv[3];
+		if (sam_file == out_filtered_sam_file):
+			sys.stderr.write('ERROR: Output and input files are the same!\n');
+			exit(0);
+		fix_sam_hnames(sam_file, out_filtered_sam_file);
+		exit(0);
+
+
 
 	else:
 		sys.stderr.write('ERROR: Unknown subcommand!\n');
