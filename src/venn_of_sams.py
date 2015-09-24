@@ -32,13 +32,15 @@ import utility_sam;
 
 def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=''):
 
-	print 'Loading first SAM file...';
+	# print 'Loading first SAM file...';
 	qnames_with_multiple_alignments = {};
-	print sam_file1, sam_file2, distance_threshold, out_summary_prefix
+	# print sam_file1, sam_file2, distance_threshold, out_summary_prefix
 	sys.stderr.write('Loading the first SAM file into hash...\n');
 	[sam_hash1, sam_hash1_num_lines, sam_hash1_num_unique_lines] = utility_sam.HashSAMWithFilter(sam_file1, qnames_with_multiple_alignments);
+	sam_headers1 = utility_sam.LoadOnlySAMHeaders(sam_file1);
 	sys.stderr.write('Loading the second SAM file into hash...\n');
 	[sam_hash2, sam_hash2_num_lines, sam_hash2_num_unique_lines] = utility_sam.HashSAMWithFilter(sam_file2, qnames_with_multiple_alignments);
+	sam_headers2 = utility_sam.LoadOnlySAMHeaders(sam_file2);
 
 	not_in_sam_file1 = 0;
 	not_in_sam_file2 = 0;
@@ -165,6 +167,7 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 		# 		not_in_sam_file1 += 1;
 		# 		qnames_not_in_sam_file1.append(qname);
 	sys.stderr.write('\n');
+	sys.stderr.write('\n');
 
 	fp_out = None;
 	fp_out_lt0bp = None;
@@ -184,16 +187,16 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 			# exit(1);
 
 	summary_line = '';
-	summary_line += 'sam_file1 = %s\n' % sam_file1;
-	summary_line += 'sam_file2 = %s\n' % sam_file2;
-	summary_line += 'not_in_sam_file1 = %d\n' % (not_in_sam_file1);
-	summary_line += 'not_in_sam_file2 = %d\n' % (not_in_sam_file2);
-	summary_line += 'num_different_reference = %d\n' % (num_different_reference);
-	summary_line += 'num_different_orientation = %d\n' % (num_different_orientation);
-	summary_line += 'num_not_mapped_1 = %d\n' % (num_not_mapped_1);
-	summary_line += 'num_not_mapped_2 = %d\n' % (num_not_mapped_2);
-	summary_line += 'num_mapped_1 = %d\n' % (num_mapped_1);
-	summary_line += 'num_mapped_2 = %d\n' % (num_mapped_2);
+	summary_line += 'SAM file 1: %s\n' % sam_file1;
+	summary_line += 'SAM file 2: %s\n' % sam_file2;
+	summary_line += 'Number of qnames not present in SAM file 1: %d\n' % (not_in_sam_file1);
+	summary_line += 'Number of qnames not present in SAM file 2: %d\n' % (not_in_sam_file2);
+	summary_line += 'Number of qnames mapped to different references: %d\n' % (num_different_reference);
+	summary_line += 'Number of alignments of different orientation: %d\n' % (num_different_orientation);
+	summary_line += 'Mapped in SAM 1: %d\n' % (num_mapped_1);
+	summary_line += 'Unmapped in SAM 1: %d\n' % (num_not_mapped_1);
+	summary_line += 'Mapped in SAM 2: %d\n' % (num_mapped_2);
+	summary_line += 'Unmapped in SAM 2: %d\n' % (num_not_mapped_2);
 	summary_line += '\n';
 
 	length_threshold = 9000;
@@ -226,7 +229,7 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 		# sorted_qnames = [str(len(single_sam_line.seq)) for single_sam_line in sorted(distance_to_sam_hash[distance], reverse=True, key=lambda sam_line: len(sam_line.seq))];
 		# summary_line = str(distance) + '\t' + str(len(distance_to_qname_hash[distance])) + '\t' + '\t'.join(distance_to_qname_hash[distance]) + '\n';
 		summary_line = str(distance) + '\t' + str(len(distance_to_qname_hash[distance])) + '\t' + '\t'.join(sorted_qnames) + '\n';
-		if (distance < distance_threshold):
+		if (distance <= distance_threshold):
 			num_same_alignments += len(distance_to_qname_hash[distance]);
 
 		# sys.stdout.write(summary_line);
@@ -234,8 +237,8 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 			fp_out.write(summary_line);
 		summary_line = '';
 
-	summary_line = 'distance_threshold = %d\n' % distance_threshold;
-	summary_line += 'num_same_alignments = %d\n' % num_same_alignments;
+	summary_line = 'Distance threshold to consider mappings same: %d\n' % distance_threshold;
+	summary_line += 'Number of same mappings: %d\n' % num_same_alignments;
 	summary_line += '\n';
 	sys.stdout.write(summary_line);
 	if (out_summary_prefix != ''):
@@ -248,6 +251,8 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 
 		out_file_qnames_not_in_sam1 = out_summary_prefix + '_qnames_not_in_sam1.csv';
 		out_file_qnames_not_in_sam2 = out_summary_prefix + '_qnames_not_in_sam2.csv';
+		out_file_qnames_not_in_sam1_as_sam = out_summary_prefix + '_qnames_not_in_sam1.sam';
+		out_file_qnames_not_in_sam2_as_sam = out_summary_prefix + '_qnames_not_in_sam2.sam';
 
 		try:
 			fp_out_qnames_not_in_sam1 = open(out_file_qnames_not_in_sam1, 'w');
@@ -257,6 +262,19 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 			fp_out_qnames_not_in_sam2.write('\n'.join(['%e\t%s' % (value[0], value[1]) for value in sorted(qnames_not_in_sam_file2, key=lambda x: x[0])]) + '\n');
 			fp_out_qnames_not_in_sam1.close();
 			fp_out_qnames_not_in_sam2.close();
+
+			fp_out1 = open(out_file_qnames_not_in_sam1_as_sam, 'w');
+			fp_out1.write('\n'.join(sam_headers2) + '\n');
+			for value in sorted(qnames_not_in_sam_file1, key=lambda x: x[0]):
+				fp_out1.write('\n'.join([sam_line.original_line for sam_line in sam_hash2[value[1]]]) + '\n');
+			fp_out1.close();
+
+			fp_out2 = open(out_file_qnames_not_in_sam2_as_sam, 'w');
+			fp_out2.write('\n'.join(sam_headers1) + '\n');
+			for value in sorted(qnames_not_in_sam_file2, key=lambda x: x[0]):
+				fp_out2.write('\n'.join([sam_line.original_line for sam_line in sam_hash1[value[1]]]) + '\n');
+			fp_out2.close();
+
 		except IOError:
 			sys.stderr.write('ERROR: Could not open file(s) for writing! Either "%s" or "%s".\n' % (out_file_qnames_not_in_sam1, out_file_qnames_not_in_sam2));
 
@@ -271,26 +289,35 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 
 # src/sam_compare_cigars.py /home/ivan/work/eclipse-workspace/golden-bundle/alignments_for_testing/reads-simulated/PacBio-100k/escherichia_coli/graphmap-params_SSW_r-test-drive.sam /home/ivan/work/eclipse-workspace/golden-bundle/reads-simulated/PacBio-100k/escherichia_coli/reads.sam temp/cigcompare.temp
 if __name__ == "__main__":
-	if (len(sys.argv) < 3 or len(sys.argv) > 5):
+	if (len(sys.argv) < 4 or len(sys.argv) > 5):
 		sys.stderr.write('Compares alignment positions between two SAM files.');
 		sys.stderr.write('Usage:\n');
-		sys.stderr.write('\t%s <input_sam_file_1> <input_sam_file_2> [distance_threshold] [<out_file_prefix>]\n' % sys.argv[0]);
+		sys.stderr.write('\t%s <input_sam_file_1> <input_sam_file_2> <out_file_prefix> [distance_threshold]\n' % sys.argv[0]);
 		sys.stderr.write('\n');
 		sys.stderr.write('\tdistance_threshold - default value is 100\n');
+		sys.stderr.write('\n');
+		sys.stderr.write('\tSeveral files will be created on disk:\n');
+		sys.stderr.write('\t\t- <out_file_prefix>_qnames_not_in_sam1.csv\n');
+		sys.stderr.write('\t\t- <out_file_prefix>_qnames_not_in_sam1.sam\n');
+		sys.stderr.write('\t\t- <out_file_prefix>_qnames_not_in_sam2.csv\n');
+		sys.stderr.write('\t\t- <out_file_prefix>_qnames_not_in_sam2.sam\n');
+		sys.stderr.write('\t\t- <out_file_prefix>_lt0bp.csv\n');
+		sys.stderr.write('\t\t- <out_file_prefix>_gt5000bp.csv\n');
+		sys.stderr.write('\t\t- <out_file_prefix>.csv\n');
+		sys.stderr.write('\n');
 		exit(1);
 	
 	sam_file1 = sys.argv[1];
 	sam_file2 = sys.argv[2];
 	distance_threshold = 100;
-	# out_summary_prefix = 'summary-%s_vs_%s' % (os.path.basename(os.path.splitext(sam_file1)[0]), os.path.basename(os.path.splitext(sam_file2)[0]));
-	out_summary_prefix = 'summary';
+	out_summary_prefix = sys.argv[3];
 
-	if (len(sys.argv) >= 4):
-		distance_threshold = int(sys.argv[3]);
-
-	if (len(sys.argv) >= 5):
-		out_summary_prefix = sys.argv[4];
+	if (len(sys.argv) == 5):
+		distance_threshold = int(sys.argv[4]);
 	
-	CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix);
+	out_summary_prefix = os.path.abspath(out_summary_prefix);
+	if (not os.path.exists(os.path.dirname(out_summary_prefix))):
+		sys.stderr.write('Creating output folder: "%s".\n' % (os.path.dirname(out_summary_prefix)));
+		os.makedirs(os.path.dirname(out_summary_prefix));
 
-	# print 'Percent correctly mapped bases: %.2f' % CompareCigars(sam_file, sam_reference_file, out_summary_prefix);
+	CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix);

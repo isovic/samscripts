@@ -350,16 +350,7 @@ def CollectAccuracy(sam_path, accuracy_path, suppress_error_messages=False):
 	mismatch_rate_stats = [np.mean(all_mismatch_rates), np.std(all_mismatch_rates), np.median(all_mismatch_rates), np.min(all_mismatch_rates), np.max(all_mismatch_rates)];
 	match_rate_stats = [np.mean(all_match_rates), np.std(all_match_rates), np.median(all_match_rates), np.min(all_match_rates), np.max(all_match_rates)];
 	read_length_stats = [np.mean(all_read_lengths), np.std(all_read_lengths), np.median(all_read_lengths), np.min(all_read_lengths), np.max(all_read_lengths)];
-	
-	# ret_lines = '';
-	# ret_lines += 'Error rate stats:     \t%s\n' % (',\t'.join(['%s = %.2f' % (column_labels[i], error_rate_stats[i]) for i in range(len(error_rate_stats))]));
-	# ret_lines += 'Insertion rate stats: \t%s\n' % (',\t'.join(['%s = %.2f' % (column_labels[i], insertion_rate_stats[i]) for i in range(len(error_rate_stats))]));
-	# ret_lines += 'Deletion rate stats:  \t%s\n' % (',\t'.join(['%s = %.2f' % (column_labels[i], deletion_rate_stats[i]) for i in range(len(error_rate_stats))]));
-	# ret_lines += 'Mismatch rate stats:  \t%s\n' % (',\t'.join(['%s = %.2f' % (column_labels[i], mismatch_rate_stats[i]) for i in range(len(error_rate_stats))]));
-	# ret_lines += 'Match rate stats:     \t%s\n' % (',\t'.join(['%s = %.2f' % (column_labels[i], match_rate_stats[i]) for i in range(len(error_rate_stats))]));
-	# ret_lines += 'Read length stats:    \t%s\n' % (',\t'.join(['%s = %.2f' % (column_labels[i], read_length_stats[i]) for i in range(len(error_rate_stats))]));
 
-	
 	ret_lines = '';
 	lines_error_rates = '';
 	lines_error_rates += '                      \t%s\n' % ('\t'.join(['%s' % (column_labels[i]) for i in range(len(error_rate_stats))]));
@@ -370,36 +361,14 @@ def CollectAccuracy(sam_path, accuracy_path, suppress_error_messages=False):
 	lines_error_rates += 'Match rate:     \t%s\n' % ('\t'.join(['%.2f' % (match_rate_stats[i]) for i in range(len(error_rate_stats))]));
 	lines_error_rates += 'Read length:    \t%s\n' % ('\t'.join(['%.2f' % (read_length_stats[i]) for i in range(len(error_rate_stats))]));
 
-	ret_lines += lines_error_rates;
-	
-	#ret_lines += 'Error rate stats: %s\n' % (', '.join(['%.2f' % value for value in error_rate_stats]));
-	#ret_lines += 'Insertion rate stats: %s\n' % (', '.join(['%.2f' % value for value in insertion_rate_stats]));
-	#ret_lines += 'Deletion rate stats: %s\n' % (', '.join(['%.2f' % value for value in deletion_rate_stats]));
-	#ret_lines += 'Mismatch rate stats: %s\n' % (', '.join(['%.2f' % value for value in mismatch_rate_stats]));
-	#ret_lines += 'Match rate stats: %s\n' % (', '.join(['%.2f' % value for value in match_rate_stats]));
-	#ret_lines += 'Read length stats: %s\n' % (', '.join(['%.2f' % value for value in read_length_stats]));
-
 	insertion_ratio = int((insertion_rate_stats[0]/error_rate_stats[0]) * 100);
 	deletion_ratio = int((deletion_rate_stats[0]/error_rate_stats[0]) * 100);
 	mismatch_ratio = 100 - insertion_ratio - deletion_ratio;
-	
-	ret_lines += 'Difference ratio: %d:%d:%d (mismatch:insertion:deletion)\n' % (mismatch_ratio, insertion_ratio, deletion_ratio);
-	
-	#print ret_lines;
 
-	#if (num_lines > 0):
-		#average_error_rate /= num_lines;
-		#average_insertion_rate /= num_lines;
-		#average_deletion_rate /= num_lines;
-		#average_snp_rate /= num_lines;
-		#average_match_rate /= num_lines;
-	
-	#i = 0;
-	#while i < (len(error_rate_hist)):
-		#if (error_rate_hist[i] < 10):
-			#print 'error_rate_hist[%d] = %d' % (i, error_rate_hist[i]);
-		#i += 1;
-	
+	lines_error_rates += 'Difference ratio:\t%d:%d:%d (mismatch:insertion:deletion)\n' % (mismatch_ratio, insertion_ratio, deletion_ratio);
+
+	ret_lines += lines_error_rates;
+
 	out_hist_path = accuracy_path + '.plot';
 	try:
 		fp_hist = open(out_hist_path, 'w');
@@ -431,12 +400,34 @@ def CollectAccuracy(sam_path, accuracy_path, suppress_error_messages=False):
 	sum_match_rate_counts = sum(match_hist);
 	match_hist = [(100*float(value)/float(sum_match_rate_counts)) for value in match_hist];
 
-
-
 	PlotErrorRates(error_rate_hist, insertion_hist, deletion_hist, snp_hist, match_hist, sam_basename, out_png_path);
-	
-	#return [match_rate, mismatch_rate, insertion_rate, deletion_rate, error_rate, matches, mismatches, insertions, deletions, errors, read_length, clipped_read_length];
-	
+
+	fig = plt.figure();
+	ax1 = plt.subplot(111);
+	length_errs = zip(all_error_rates, all_read_lengths);
+	# length_errs = zip(all_read_lengths, all_error_rates);
+	# length_errs = sorted(length_errs, key=lambda x: x[0]);
+	# plt.scatter([val[0] for val in length_errs if val[0] < 10000], [val[1] for val in length_errs if val[0] < 10000]);
+	# plt.scatter([val[0] for val in length_errs], [val[1] for val in length_errs]);
+	# print length_errs;
+	maxx = max(all_error_rates);
+	maxy = max(all_read_lengths);
+	x = [val[0] for val in length_errs];
+	# y = [float(val[1])/float(maxy) for val in length_errs];
+	y = [float(val[1]) for val in length_errs];
+	# x = [val[0] for val in length_errs if val[1] < 1000];
+	# y = [val[1] for val in length_errs if val[1] < 1000];
+	# x = all_error_rates;
+	# y = all_read_lengths;
+
+	heatmap, xedges, yedges = np.histogram2d(x, y, bins=50)
+	extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+	print heatmap
+
+	plt.clf()
+	plt.imshow(heatmap, extent=extent)
+	plt.show()
+
 	return [ret_lines, lines_error_rates, error_rate_hist, insertion_hist, deletion_hist, snp_hist, match_hist, sam_basename, out_png_path];
 	
 	
@@ -514,7 +505,8 @@ def print_usage_and_exit():
 	sys.stderr.write('\n');
 	sys.stderr.write('mode - "base" calculates error rates with indels viewed as per-base events.\n');
 	sys.stderr.write('       "event" calculates error rates with indels counted as entire events.\n');
-	sys.stderr.write('       "collect" does not recalculate error rates, but just collects and plots.\n');
+	sys.stderr.write('       "collectbase" does not recalculate error rates, but just collects and plots.\n');
+	sys.stderr.write('       "collectevent" does not recalculate error rates, but just collects and plots.\n');
 	sys.stderr.write('\n');
 	exit(0);
 
@@ -523,26 +515,46 @@ if __name__ == "__main__":
 		print_usage_and_exit();
 
 	mode = sys.argv[1];
-	reference_file = sys.argv[2];
-	sam_file = sys.argv[3];
+	reference_file = os.path.abspath(sys.argv[2]);
+	sam_file = os.path.abspath(sys.argv[3]);
 
-	if (not mode in ['base', 'event', 'collect']):
-		print_usage_and_exit();
+	# if (not mode in ['base', 'event', 'collect']):
+	# 	print_usage_and_exit();
 
-	out_path = os.path.dirname(sam_file);
+
+	out_path = os.path.dirname(sam_file) + '/analysis-error_rate';
 	if (out_path == ''):
 		out_path = './';
 
+	if (not os.path.exists(out_path)):
+		sys.stderr.write('Creating output folder: "%s".\n' % (out_path));
+		os.makedirs(out_path);
+
 	# sys.stderr.write('Using mode: %s\n' % mode);
 	
-	out_accuracy_counts_path = '%s/%s-error_rates-%s.csv' % (out_path, os.path.basename(sam_file), mode);
 	# out_summary_path = '%s/%s-error_rates-%s-summary.txt' % (out_path, os.path.basename(sam_file), mode);
-	out_summary_stats_path = '%s/%s-error_rates-%s-summary.csv' % (out_path, os.path.basename(sam_file), mode);
 
 	if (mode == 'base'):
+		out_accuracy_counts_path = '%s/%s-error_rates-%s.csv' % (out_path, os.path.basename(sam_file), mode);
+		out_summary_stats_path = '%s/%s-error_rates-%s-summary.csv' % (out_path, os.path.basename(sam_file), mode);
 		ProcessFromFiles(reference_file, sam_file, out_accuracy_counts_path, False);
-	if (mode == 'event'):
+	elif (mode == 'event'):
+		out_accuracy_counts_path = '%s/%s-error_rates-%s.csv' % (out_path, os.path.basename(sam_file), mode);
+		out_summary_stats_path = '%s/%s-error_rates-%s-summary.csv' % (out_path, os.path.basename(sam_file), mode);
 		ProcessFromFiles(reference_file, sam_file, out_accuracy_counts_path, True);
+	elif (mode == 'collectbase'):
+		out_accuracy_counts_path = '%s/%s-error_rates-base.csv' % (out_path, os.path.basename(sam_file));
+		out_summary_stats_path = '%s/%s-error_rates-base-summary.csv' % (out_path, os.path.basename(sam_file));
+	elif (mode == 'collectevent'):
+		out_accuracy_counts_path = '%s/%s-error_rates-event.csv' % (out_path, os.path.basename(sam_file));
+		out_summary_stats_path = '%s/%s-error_rates-event-summary.csv' % (out_path, os.path.basename(sam_file));
+	else:
+		sys.stderr.write('ERROR: Wrong mode specified. Exiting.\n');
+		print_usage_and_exit();
+
+	if (not os.path.exists(out_accuracy_counts_path)):
+		sys.stderr.write('ERROR: Accuracy counts path does not exist! File: "%s" not found.\n' % (out_accuracy_counts_path));
+		exit(1);
 
 	[ret_lines, lines_error_rates, error_rate_hist, insertion_hist, deletion_hist, snp_hist, match_hist, sam_basename, out_png_path] = CollectAccuracy(sam_file, out_accuracy_counts_path);
 	sys.stdout.write(ret_lines);

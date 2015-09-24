@@ -1351,7 +1351,7 @@ def marginalign_filter(sam_file, out_filtered_sam_file):
 	except:
 		pass;
 
-def fix_sam_hnames(sam_file, out_filtered_sam_file):
+def fix_sam_hnames(sam_file, reference_path, out_filtered_sam_file):
 	fp_in = None;
 	fp_out = None;
 	
@@ -1837,10 +1837,10 @@ if __name__ == "__main__":
 		exit(0);
 
 	elif (sys.argv[1] == 'fixhnames'):
-		if (len(sys.argv) != 4):
+		if (len(sys.argv) < 4 or len(sys.argv) > 5):
 			sys.stderr.write('Changes the qnames and the rnames of alignments not to include special characters.\n');
 			sys.stderr.write('Usage:\n');
-			sys.stderr.write('\t%s %s <input_sam_file> <out_filtered_sam_file>\n' % (sys.argv[0], sys.argv[1]));
+			sys.stderr.write('\t%s %s <input_sam_file> <out_filtered_sam_file> [<reference_file>]\n' % (sys.argv[0], sys.argv[1]));
 			exit(0);
 
 		sam_file = sys.argv[2];
@@ -1848,7 +1848,10 @@ if __name__ == "__main__":
 		if (sam_file == out_filtered_sam_file):
 			sys.stderr.write('ERROR: Output and input files are the same!\n');
 			exit(0);
-		fix_sam_hnames(sam_file, out_filtered_sam_file);
+		reference_path = '';
+		if (len(sys.argv) == 5):
+			reference_path = sys.argv[5];
+		fix_sam_hnames(sam_file, reference_path, out_filtered_sam_file);
 		exit(0);
 
 

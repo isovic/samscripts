@@ -145,6 +145,15 @@ def process_mpileup_line(line, line_number, ret_variant_list, ret_vcf_list, ret_
 		#ret_variant_list.append(variant_line);
 		variant_line = 'undercovered1\tpos = %s\tref = %s\tcoverage = %d\tbase_counts = %s\tinsertion_counts = %s\tdeletion_counts = %s' % (position, ref_name, int(coverage), str(sorted_base_counts), str(insertion_event_counts), str(deletion_event_counts));
 		ret_variant_list.append(variant_line);
+
+		### VCF output ###
+		qual = 1000;
+		info = 'DP=%s;TYPE=snp' % (coverage);
+		ref_field = ref_base;
+		alt_field = 'N';
+		vcf_line = '%s\t%s\t.\t%s\t%s\t%d\tPASS\t%s' % (ref_name, position, ref_field, alt_field, qual, info);
+		ret_vcf_list.append(vcf_line);
+		##################
 		
 	else:
 		ret_num_called_bases[0] += 1;
