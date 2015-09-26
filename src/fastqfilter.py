@@ -272,22 +272,36 @@ def filter_for_marginalign(input_fastq_path, out_fastq_path, fp_out):
 	except:
 		sys.stderr.write('ERROR: Could not open file "%s" for reading! Exiting.\n' % input_fastq_path);
 		exit(0);
+	if (fp_out == None):
+		if (input_fastq_path == out_fastq_path):
+			sys.stderr.write('ERROR: Output and input files are the same! Exiting.\n');
+			exit(0);
+		try:
+			fp_out = open(out_fastq_path, 'w');
+		except:
+			sys.stderr.write('ERROR: Could not open file "%s" for writing! Exiting.\n' % out_fastq_path);
+			exit(0);
 
 	num_matches = 0;
+	header_hash = {};
 
 	while True:
-		[header, read] = fastqparser.get_single_read(fp_in);
+		[header, read] = get_single_read(fp_in);
 		
 		if (len(read) == 0):
 			break;
 
 		# read[0] = read[0][0] + read[0][1:].replace();
 		if (len(read[1]) <= 50000):
-			read[0] = read[0][0] + re.sub('[^0-9a-zA-Z]', '_', read[0][1:]); # re.sub("[|:", "_", read[0][1:]);
+			# read[0] = read[0][0] + re.sub('[^0-9a-zA-Z]', '_', read[0][1:]); # re.sub("[|:", "_", read[0][1:]);
+			new_header = read[0][0] + re.sub('[^0-9a-zA-Z]', '_', read[0][1:]); # re.sub("[|:", "_", read[0][1:]);
+			header_hash[new_header[1:]] = read[0][1:];
+			read[0] = new_header;
 			fp_out.write('\n'.join(read) + '\n');
 
 	sys.stderr.write('\n');
 	fp_in.close();
+	return header_hash;
 
 def wrap_fastq_file(input_fastq_path, wrap_length, out_fastq_path, fp_out):
 	try:
@@ -361,7 +375,45 @@ def enumerate_headers(input_fastq_path, out_fastq_path, fp_out):
 	sys.stderr.write('\n');
 	fp_in.close();
 
+### Modifies the FASTQ headers to replace all special chars with '_'.
+def keep_gi_header(input_fastq_path, out_fastq_path, fp_out):
+	try:
+		fp_in = open(input_fastq_path, 'r');
+	except:
+		sys.stderr.write('ERROR: Could not open file "%s" for reading! Exiting.\n' % input_fastq_path);
+		exit(0);
+	num_matches = 0;
+	# header_hash = {};
+	while True:
+		[header, read] = get_single_read(fp_in);
+		if (len(read) == 0):
+			break;
+		read[0] = read[0].split()[0];
+		fp_out.write('\n'.join(read) + '\n');
+	sys.stderr.write('\n');
+	fp_in.close();
+	fp_out.close();
+	# return header_hash;
 
+### Modifies the FASTQ headers to replace all special chars with '_'.
+def uniquify_headers(input_fastq_path, out_fastq_path, fp_out):
+	try:
+		fp_in = open(input_fastq_path, 'r');
+	except:
+		sys.stderr.write('ERROR: Could not open file "%s" for reading! Exiting.\n' % input_fastq_path);
+		exit(0);
+	num_seqs = 0;
+	while True:
+		[header, read] = get_single_read(fp_in);
+		if (len(read) == 0):
+			break;
+		read[0] = read[0].split()[0] + '-%d' % (num_seqs);
+		fp_out.write('\n'.join(read) + '\n');
+		num_seqs += 1;
+	sys.stderr.write('\n');
+	fp_in.close();
+	fp_out.close();
+	# return header_hash;
 
 if __name__ == "__main__":
 	if (len(sys.argv) < 2):
@@ -379,6 +431,8 @@ if __name__ == "__main__":
 		sys.stderr.write('\twrap\n');
 		sys.stderr.write('\ttouppercase\n');
 		sys.stderr.write('\tenumerate\n');
+		sys.stderr.write('\tgiheader\n');
+		sys.stderr.write('\tuniquify\n');
 
 		exit(0);
 
@@ -686,6 +740,64 @@ if __name__ == "__main__":
 				exit(0);
 
 		enumerate_headers(input_fastq_path, out_fastq_path, fp_out)
+
+		if (fp_out != sys.stdout):
+			fp_out.close();
+
+		exit(0);
+
+	elif (sys.argv[1] == 'giheader'):
+		if (len(sys.argv) < 4 or len(sys.argv) > 4):
+			sys.stderr.write('If a FASTQ file contains whitespaces, remove everything after the first whitespace.\n');
+			sys.stderr.write('Usage:\n');
+			sys.stderr.write('\t%s %s <input_fastq_file> [<out_filtered_fastq_file>]\n' % (os.path.basename(sys.argv[0]), sys.argv[1]));
+			exit(0);
+
+		input_fastq_path = sys.argv[2];
+
+		out_fastq_path = '';
+		fp_out = sys.stdout;
+		if (len(sys.argv) == 4):
+			out_fastq_path = sys.argv[3];
+			if (input_fastq_path == out_fastq_path):
+				sys.stderr.write('ERROR: Output and input files are the same! Exiting.\n');
+				exit(0);
+			try:
+				fp_out = open(out_fastq_path, 'w');
+			except Exception, e:
+				sys.stderr.write(str(e));
+				exit(0);
+
+		keep_gi_header(input_fastq_path, out_fastq_path, fp_out)
+
+		if (fp_out != sys.stdout):
+			fp_out.close();
+
+		exit(0);
+
+	elif (sys.argv[1] == 'uniquify'):
+		if (len(sys.argv) < 4 or len(sys.argv) > 4):
+			sys.stderr.write('Makes all headers in a FASTQ file unique by adding a number at the end of the header. Also, splits headers up to the first whitespace.\n');
+			sys.stderr.write('Usage:\n');
+			sys.stderr.write('\t%s %s <input_fastq_file> [<out_filtered_fastq_file>]\n' % (os.path.basename(sys.argv[0]), sys.argv[1]));
+			exit(0);
+
+		input_fastq_path = sys.argv[2];
+
+		out_fastq_path = '';
+		fp_out = sys.stdout;
+		if (len(sys.argv) == 4):
+			out_fastq_path = sys.argv[3];
+			if (input_fastq_path == out_fastq_path):
+				sys.stderr.write('ERROR: Output and input files are the same! Exiting.\n');
+				exit(0);
+			try:
+				fp_out = open(out_fastq_path, 'w');
+			except Exception, e:
+				sys.stderr.write(str(e));
+				exit(0);
+
+		uniquify_headers(input_fastq_path, out_fastq_path, fp_out)
 
 		if (fp_out != sys.stdout):
 			fp_out.close();
