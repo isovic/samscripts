@@ -385,7 +385,7 @@ def keep_gi_header(input_fastq_path, out_fastq_path, fp_out):
 	num_matches = 0;
 	# header_hash = {};
 	while True:
-		[header, read] = get_single_read(fp_in);
+		[header, read] = fastqparser.get_single_read(fp_in);
 		if (len(read) == 0):
 			break;
 		read[0] = read[0].split()[0];
@@ -404,7 +404,7 @@ def uniquify_headers(input_fastq_path, out_fastq_path, fp_out):
 		exit(0);
 	num_seqs = 0;
 	while True:
-		[header, read] = get_single_read(fp_in);
+		[header, read] = fastqparser.get_single_read(fp_in);
 		if (len(read) == 0):
 			break;
 		read[0] = read[0].split()[0] + '-%d' % (num_seqs);
