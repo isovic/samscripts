@@ -402,31 +402,31 @@ def CollectAccuracy(sam_path, accuracy_path, suppress_error_messages=False):
 
 	PlotErrorRates(error_rate_hist, insertion_hist, deletion_hist, snp_hist, match_hist, sam_basename, out_png_path);
 
-	fig = plt.figure();
-	ax1 = plt.subplot(111);
-	length_errs = zip(all_error_rates, all_read_lengths);
-	# length_errs = zip(all_read_lengths, all_error_rates);
-	# length_errs = sorted(length_errs, key=lambda x: x[0]);
-	# plt.scatter([val[0] for val in length_errs if val[0] < 10000], [val[1] for val in length_errs if val[0] < 10000]);
-	# plt.scatter([val[0] for val in length_errs], [val[1] for val in length_errs]);
-	# print length_errs;
-	maxx = max(all_error_rates);
-	maxy = max(all_read_lengths);
-	x = [val[0] for val in length_errs];
-	# y = [float(val[1])/float(maxy) for val in length_errs];
-	y = [float(val[1]) for val in length_errs];
-	# x = [val[0] for val in length_errs if val[1] < 1000];
-	# y = [val[1] for val in length_errs if val[1] < 1000];
-	# x = all_error_rates;
-	# y = all_read_lengths;
+	# fig = plt.figure();
+	# ax1 = plt.subplot(111);
+	# length_errs = zip(all_error_rates, all_read_lengths);
+	# # length_errs = zip(all_read_lengths, all_error_rates);
+	# # length_errs = sorted(length_errs, key=lambda x: x[0]);
+	# # plt.scatter([val[0] for val in length_errs if val[0] < 10000], [val[1] for val in length_errs if val[0] < 10000]);
+	# # plt.scatter([val[0] for val in length_errs], [val[1] for val in length_errs]);
+	# # print length_errs;
+	# maxx = max(all_error_rates);
+	# maxy = max(all_read_lengths);
+	# x = [val[0] for val in length_errs];
+	# # y = [float(val[1])/float(maxy) for val in length_errs];
+	# y = [float(val[1]) for val in length_errs];
+	# # x = [val[0] for val in length_errs if val[1] < 1000];
+	# # y = [val[1] for val in length_errs if val[1] < 1000];
+	# # x = all_error_rates;
+	# # y = all_read_lengths;
 
-	heatmap, xedges, yedges = np.histogram2d(x, y, bins=50)
-	extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
-	print heatmap
+	# heatmap, xedges, yedges = np.histogram2d(x, y, bins=50)
+	# extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+	# # print heatmap
 
-	plt.clf()
-	plt.imshow(heatmap, extent=extent)
-	plt.show()
+	# plt.clf()
+	# plt.imshow(heatmap, extent=extent)
+	# plt.show()
 
 	return [ret_lines, lines_error_rates, error_rate_hist, insertion_hist, deletion_hist, snp_hist, match_hist, sam_basename, out_png_path];
 	
