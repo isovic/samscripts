@@ -1220,6 +1220,7 @@ def generate_AS(sam_file, reference_file, match_score, mismatch_penalty, gap_ope
 		if (sam_line.IsMapped() == False):
 			fp_out.write(line + '\n');
 			num_unmapped += 1;
+			continue;
 
 		rname = sam_line.rname;
 		try:

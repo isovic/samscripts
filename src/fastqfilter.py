@@ -45,6 +45,7 @@ def filter_seqs_by_header(input_fastq_path, header_patterns_path, out_fastq_path
 				num_matches += 1;
 				sys.stderr.write('\rFound %d seqs, last: "%s".' % (num_matches, header));
 				fp_out.write('\n'.join(read) + '\n');
+				break;
 		
 	sys.stderr.write('\n');
 	fp_in.close();
