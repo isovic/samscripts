@@ -15,6 +15,7 @@ USE_MATPLOTLIB = True;
 try:
 	import matplotlib.pyplot as plt;
 	from matplotlib.font_manager import FontProperties;
+	plt.use('Agg');
 except:
 	USE_MATPLOTLIB = False;
 

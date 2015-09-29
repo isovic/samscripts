@@ -56,6 +56,7 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 	distance_count_hash = {};
 	distance_to_qname_hash = {};
 	distance_to_sam_hash = {};
+	shared_qnames = {};
 
 	num_processed = 0;
 
@@ -107,6 +108,8 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 				continue;
 
 			distance = abs(sorted_sam_line_list1[0].clipped_pos - sorted_sam_line_list2[0].clipped_pos);
+			if (not (qname in shared_qnames)):
+				shared_qnames[qname] = 1;
 			qname_to_distance_hash[qname] = distance;
 			if (distance in distance_count_hash):
 				distance_count_hash[distance] += 1;
@@ -254,6 +257,9 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 		out_file_qnames_not_in_sam1_as_sam = out_summary_prefix + '_qnames_not_in_sam1.sam';
 		out_file_qnames_not_in_sam2_as_sam = out_summary_prefix + '_qnames_not_in_sam2.sam';
 
+		out_file_qnames_in_both_sam1_as_sam = out_summary_prefix + '_qnames_in_both-from_sam1.sam';
+		out_file_qnames_in_both_sam2_as_sam = out_summary_prefix + '_qnames_in_both-from_sam2.sam';
+
 		try:
 			fp_out_qnames_not_in_sam1 = open(out_file_qnames_not_in_sam1, 'w');
 			fp_out_qnames_not_in_sam2 = open(out_file_qnames_not_in_sam2, 'w');
@@ -273,6 +279,18 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 			fp_out2.write('\n'.join(sam_headers1) + '\n');
 			for value in sorted(qnames_not_in_sam_file2, key=lambda x: x[0]):
 				fp_out2.write('\n'.join([sam_line.original_line for sam_line in sam_hash1[value[1]]]) + '\n');
+			fp_out2.close();
+
+			fp_out1 = open(out_file_qnames_in_both_sam1_as_sam, 'w');
+			fp_out1.write('\n'.join(sam_headers1) + '\n');
+			for value in shared_qnames:
+				fp_out1.write('\n'.join([sam_line.original_line for sam_line in sam_hash1[value]]) + '\n');
+			fp_out1.close();
+
+			fp_out2 = open(out_file_qnames_in_both_sam2_as_sam, 'w');
+			fp_out2.write('\n'.join(sam_headers2) + '\n');
+			for value in shared_qnames:
+				fp_out2.write('\n'.join([sam_line.original_line for sam_line in sam_hash2[value]]) + '\n');
 			fp_out2.close();
 
 		except IOError:
@@ -299,8 +317,10 @@ if __name__ == "__main__":
 		sys.stderr.write('\tSeveral files will be created on disk:\n');
 		sys.stderr.write('\t\t- <out_file_prefix>_qnames_not_in_sam1.csv\n');
 		sys.stderr.write('\t\t- <out_file_prefix>_qnames_not_in_sam1.sam\n');
+		sys.stderr.write('\t\t- <out_file_prefix>_qnames_in_both_sam1.sam\t- Alignments from SAM1 which are also mapped in SAM2.\n');
 		sys.stderr.write('\t\t- <out_file_prefix>_qnames_not_in_sam2.csv\n');
 		sys.stderr.write('\t\t- <out_file_prefix>_qnames_not_in_sam2.sam\n');
+		sys.stderr.write('\t\t- <out_file_prefix>_qnames_in_both_sam2.sam\t- Alignments from SAM2 which are also mapped in SAM1.\n');
 		sys.stderr.write('\t\t- <out_file_prefix>_lt0bp.csv\n');
 		sys.stderr.write('\t\t- <out_file_prefix>_gt5000bp.csv\n');
 		sys.stderr.write('\t\t- <out_file_prefix>.csv\n');
