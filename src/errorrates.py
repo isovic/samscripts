@@ -13,11 +13,15 @@ import numpy as np;
 
 USE_MATPLOTLIB = True;
 try:
-	import matplotlib.pyplot as plt;
-	from matplotlib.font_manager import FontProperties;
-	plt.use('Agg');
-except:
-	USE_MATPLOTLIB = False;
+        import matplotlib;
+        matplotlib.use('Agg');
+        import matplotlib.pyplot as plt;
+        from matplotlib.font_manager import FontProperties;
+except Exception, e:
+        USE_MATPLOTLIB = False;
+        sys.stderr.write('Exception when importing Matplotlib.\n');
+        sys.stderr.write(str(e) + '\n');
+        sys.stderr.write('\n');
 
 HIGH_DPI_PLOT = False;
 # HIGH_DPI_PLOT = True;

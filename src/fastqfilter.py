@@ -139,6 +139,9 @@ def base_quality_stats(input_fastq_path):
 	means_2d = [];
 
 	while True:
+		if ((num_reads % 100) == 0):
+			sys.stderr.write('\rProcessing seq %d...' % num_reads);
+
 		[header, read] = fastqparser.get_single_read(fp_in);
 		if (len(read) == 0):
 			break;
@@ -153,29 +156,73 @@ def base_quality_stats(input_fastq_path):
 			phreds.append(ord(char) - 33);
 		if (('twodir' in header.lower()) or ('-2d' in header.lower())):
 			means_2d.append(np.mean(phreds));
-			# sys.stdout.write('[2d] ');
 		else:
 			means_1d.append(np.mean(phreds));
-		# 	sys.stdout.write('     ');
-		# sys.stdout.write('avg = %5.2f\tstd = %5.2f\tmin = %2d\tmax = %2d\n' % (np.mean(phreds), np.std(phreds), min(phreds), max(phreds)));
 
 		num_reads += 1;
 
-		# if (len(read[1]) >= min_length):
-		# 	num_matches += 1;
-		# 	sys.stderr.write('\rFound %d seqs, last: "%s".' % (num_matches, header));
-		# 	fp_out.write('\n'.join(read) + '\n');
-		# fp_out.write('\n');
-		# fp_out.write('(1) ' + read[0] + '\n');
-		# fp_out.write('(2) ' + read[1] + '\n');
+	sys.stderr.write('\n');
 
-			# exit(1);
-		
-	sys.stdout.write('[1d] avg = %5.2f\tstd = %5.2f\tmin = %2d\tmax = %2d\n' % (np.mean(means_1d), np.std(means_1d), min(means_1d), max(means_1d)));
-	sys.stdout.write('[2d] avg = %5.2f\tstd = %5.2f\tmin = %2d\tmax = %2d\n' % (np.mean(means_2d), np.std(means_2d), min(means_2d), max(means_2d)));
+	if (len(means_1d) > 0):
+		sys.stdout.write('[1d] avg = %5.2f\tstd = %5.2f\tmin = %2d\tmax = %2d\n' % (np.mean(means_1d), np.std(means_1d), min(means_1d), max(means_1d)));
+	else:
+		sys.stdout.write('[1d] avg = %5.2f\tstd = %5.2f\tmin = %2d\tmax = %2d\n' % (0.0, 0.0, 0.0, 0.0));
+	if (len(means_2d) > 0):
+		sys.stdout.write('[2d] avg = %5.2f\tstd = %5.2f\tmin = %2d\tmax = %2d\n' % (np.mean(means_2d), np.std(means_2d), min(means_2d), max(means_2d)));
+	else:
+		sys.stdout.write('[2d] avg = %5.2f\tstd = %5.2f\tmin = %2d\tmax = %2d\n' % (0.0, 0.0, 0.0, 0.0));
+
+	fp_in.close();
+
+def base_quality_filter(input_fastq_path, lte_gte, qv_threshold, out_fastq_path, fp_out):
+	try:
+		fp_in = open(input_fastq_path, 'r');
+	except:
+		sys.stderr.write('ERROR: Could not open file "%s" for reading! Exiting.\n' % input_fastq_path);
+		return;
+
+	num_reads = 0;
+	num_outputted_reads = 0;
+	num_skipped_reads = 0;
+
+	while True:
+		if ((num_reads % 100) == 0):
+			sys.stderr.write('\rProcessing seq %d...' % num_reads);
+
+		[header, read] = fastqparser.get_single_read(fp_in);
+		if (len(read) == 0):
+			break;
+
+		if (len(read) < 4):
+			sys.stderr.write('Given file is not a FASTQ file! Exiting.\n');
+			return;
+
+		quals = read[3];
+		phreds = [];
+		for char in quals:
+			phreds.append(ord(char) - 33);
+		mean_qv = np.mean(phreds);
+
+		if ((lte_gte == '>' and mean_qv > qv_threshold) or
+			(lte_gte == '>=' and mean_qv >= qv_threshold) or
+			(lte_gte == '<' and mean_qv < qv_threshold) or
+			(lte_gte == '<=' and mean_qv <= qv_threshold) or
+			(lte_gte == '=' and mean_qv == qv_threshold)):
+			fp_out.write('\n'.join(read));
+			num_outputted_reads += 1;
+		else:
+			num_skipped_reads += 1;
+
+		num_reads += 1;
 
 	sys.stderr.write('\n');
+	sys.stderr.write('Total number of sequences: %d\n' % (num_reads));
+	sys.stderr.write('Number of outputted sequences: %d\n' % (num_outputted_reads));
+	sys.stderr.write('Number of sequences not satisfying condition: %d\n' % (num_skipped_reads));
+	sys.stderr.write('\n');
 	fp_in.close();
+
+
 
 def reverse_complement_seqs(input_fastq_path):
 	try:
@@ -393,7 +440,6 @@ def keep_gi_header(input_fastq_path, out_fastq_path, fp_out):
 		fp_out.write('\n'.join(read) + '\n');
 	sys.stderr.write('\n');
 	fp_in.close();
-	fp_out.close();
 	# return header_hash;
 
 ### Modifies the FASTQ headers to replace all special chars with '_'.
@@ -413,7 +459,6 @@ def uniquify_headers(input_fastq_path, out_fastq_path, fp_out):
 		num_seqs += 1;
 	sys.stderr.write('\n');
 	fp_in.close();
-	fp_out.close();
 	# return header_hash;
 
 if __name__ == "__main__":
@@ -434,6 +479,7 @@ if __name__ == "__main__":
 		sys.stderr.write('\tenumerate\n');
 		sys.stderr.write('\tgiheader\n');
 		sys.stderr.write('\tuniquify\n');
+		sys.stderr.write('\tqvfilter\n');
 
 		exit(0);
 
@@ -799,6 +845,44 @@ if __name__ == "__main__":
 				exit(0);
 
 		uniquify_headers(input_fastq_path, out_fastq_path, fp_out)
+
+		if (fp_out != sys.stdout):
+			fp_out.close();
+
+		exit(0);
+
+	elif (sys.argv[1] == 'qvfilter'):
+		if (len(sys.argv) < 4 or len(sys.argv) > 5):
+			sys.stderr.write('Output only reads which have average base qualities above or below certain threshold.\n');
+			sys.stderr.write('Usage:\n');
+			sys.stderr.write('\t%s %s lte_gte threshold <input_fastq_file> [<out_filtered_fastq_file>]\n' % (os.path.basename(sys.argv[0]), sys.argv[1]));
+			sys.stderr.write('\n');
+			sys.stderr.write('\tlte_gte - Select which reads to output. Can be either "<", "<=", ">", ">=" or "=".\n');
+			sys.stderr.write('\n');
+			exit(0);
+
+		lte_gte = sys.argv[1];
+		qv_threshold = sys.argv[2];
+		input_fastq_path = sys.argv[3];
+
+		if ((lte_gte in ['<', '<=', '>', '>=', '=']) == False):
+			sys.stderr.write('ERROR: Incorrect value of the lte_gte parameter. Should be either "<" or ">".');
+			exit(1);
+
+		out_fastq_path = '';
+		fp_out = sys.stdout;
+		if (len(sys.argv) == 5):
+			out_fastq_path = sys.argv[4];
+			if (input_fastq_path == out_fastq_path):
+				sys.stderr.write('ERROR: Output and input files are the same! Exiting.\n');
+				exit(0);
+			try:
+				fp_out = open(out_fastq_path, 'w');
+			except Exception, e:
+				sys.stderr.write(str(e));
+				exit(0);
+
+		base_quality_filter(input_fastq_path, lte_gte, qv_threshold, out_fastq_path, fp_out)
 
 		if (fp_out != sys.stdout):
 			fp_out.close();

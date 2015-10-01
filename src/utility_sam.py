@@ -459,8 +459,7 @@ class SAMLine:
 	# import utility_sam;
 	# [headers, sam_lines] = utility_sam.LoadSAM(sam_path);
 	# for sam_line in sam_lines:
-	#	cigar_pos_list = sam_line.CalcCigarStartingPositions();
-	#	print cigar_pos_list;
+	#	[cigar_count, cigar_op, pos_on_ref, pos_on_read] = sam_line.CalcCigarStartingPositions();
 	
 	def CalcCigarStartingPositions(self, separate_matches_in_individual_bases=False, switch_ins_and_dels=False):
 		#cigar_list = self.SplitCigar();
@@ -554,7 +553,22 @@ class SAMLine:
 
 		return True;
 
+	def CountErroneousWindows(self, window_len, min_error_rate):
+		min_error_rate = 0;
+		num_windows = 0;
 
+		# [cigar_count, cigar_op, pos_on_ref, pos_on_read] = self.CalcCigarStartingPositions(separate_matches_in_individual_bases=True);
+
+		# seq_len = len(self.seq);
+		# if (self.clip_op_back == 'S'):
+		# 	seq_len -= self.clip_count_back;
+
+		# window_start = (self.clip_count_front) if (self.clip_op_front == 'S') else (0);
+		# while (window_start < len(seq_len)):
+
+		# 	window_start += 1;
+
+		return [num_over_threshold, num_windows];
 	
 
 

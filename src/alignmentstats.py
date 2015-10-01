@@ -20,10 +20,15 @@ import consensus;
 
 USE_MATPLOTLIB = True;
 try:
-	import matplotlib.pyplot as plt;
-	from matplotlib.font_manager import FontProperties;
-except:
-	USE_MATPLOTLIB = False;
+        import matplotlib;
+        matplotlib.use('Agg');
+        import matplotlib.pyplot as plt;
+        from matplotlib.font_manager import FontProperties;
+except Exception, e:
+        USE_MATPLOTLIB = False;
+        sys.stderr.write('Exception when importing Matplotlib.\n');
+        sys.stderr.write(str(e) + '\n');
+        sys.stderr.write('\n');
 
 COLLECT_RESULTS_WITHOUT_REANALYSIS = False;
 #COLLECT_RESULTS_WITHOUT_REANALYSIS = True;
