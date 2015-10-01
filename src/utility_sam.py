@@ -1341,7 +1341,7 @@ def CountCorrectlyMappedBases(hashed_sam_lines, hashed_reference_sam, out_summar
 	i = 0;
 	for qname in hashed_sam_lines.keys():
 		i += 1;
-		if ((i % 100) == 0):
+		if ((i % 1000) == 0):
 			sys.stderr.write('\rLine %d' % (i));
 			sys.stderr.flush();
 

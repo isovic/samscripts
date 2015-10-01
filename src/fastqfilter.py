@@ -60,7 +60,9 @@ def filter_duplicate_ncbi_id(input_fastq_path, out_fastq_path, fp_out):
 	num_matches = 0;
 	id_hash = {};
 
+	i = 0;
 	while True:
+		i += 1;
 		[header, read] = fastqparser.get_single_read(fp_in);
 		
 		if (len(read) == 0):
@@ -72,7 +74,8 @@ def filter_duplicate_ncbi_id(input_fastq_path, out_fastq_path, fp_out):
 			continue;
 
 		num_matches += 1;
-		sys.stderr.write('\rFound %d seqs, last: "%s".' % (num_matches, header));
+		if ((i % 1000) == 0):
+			sys.stderr.write('\rFound %d seqs, last: "%s".' % (num_matches, header));
 		fp_out.write('\n'.join(read) + '\n');
 		id_hash[header_id] = True;
 
@@ -108,7 +111,9 @@ def filter_seqs_by_length(input_fastq_path, min_length, out_fastq_path, fp_out):
 
 	num_matches = 0;
 
+	i = 0;
 	while True:
+		i += 1;
 		[header, read] = fastqparser.get_single_read(fp_in);
 		
 		if (len(read) == 0):
@@ -116,7 +121,8 @@ def filter_seqs_by_length(input_fastq_path, min_length, out_fastq_path, fp_out):
 		
 		if (len(read[1]) >= min_length):
 			num_matches += 1;
-			sys.stderr.write('\rFound %d seqs, last: "%s".' % (num_matches, header));
+			if ((i % 1000) == 0):
+				sys.stderr.write('\rFound %d seqs, last: "%s".' % (num_matches, header));
 			fp_out.write('\n'.join(read) + '\n');
 		# fp_out.write('\n');
 		# fp_out.write('(1) ' + read[0] + '\n');
@@ -186,7 +192,7 @@ def base_quality_filter(input_fastq_path, lte_gte, qv_threshold, out_fastq_path,
 	num_skipped_reads = 0;
 
 	while True:
-		if ((num_reads % 100) == 0):
+		if ((num_reads % 1000) == 0):
 			sys.stderr.write('\rProcessing seq %d...' % num_reads);
 
 		[header, read] = fastqparser.get_single_read(fp_in);
@@ -265,7 +271,8 @@ def hard_clip(input_fastq_path, num_bases):
 	sys.stderr.write('Starting to process file "%s".\n' % input_fastq_path);
 	while True:
 		num_reads += 1;
-		sys.stderr.write('\rProcessing seq %d...' % num_reads);
+		if ((num_reads % 1000) == 0):
+			sys.stderr.write('\rProcessing seq %d...' % num_reads);
 
 		[header, read] = fastqparser.get_single_read(fp_in);
 		if (len(read) == 0):

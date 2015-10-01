@@ -273,7 +273,7 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 				continue;
 
 		if (thread_id == 0):
-			if ((j % 100) == 0):
+			if ((j % 1000) == 0):
 				sys.stderr.write('\r[%d] insertion events: %d, deletion events: %d, current coverage: %d' % (i, num_insertion_events, num_deletion_events, int(mpileup_cov)));
 				sys.stderr.flush();
 

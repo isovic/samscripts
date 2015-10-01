@@ -465,7 +465,7 @@ def ProcessSAM(references, sam_path, accuracy_counts_path, count_indels_as_event
 	for line in fp_sam:
 		i += 1;
 		
-		if ((i % 100) == 0):
+		if ((i % 1000) == 0):
 			sys.stderr.write('Processing alignment: %d...\r' % (i));
 			sys.stderr.flush();
 

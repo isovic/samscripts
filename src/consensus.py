@@ -400,7 +400,7 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 				continue;
 		
 		if (thread_id == 0):
-			if ((j % 100) == 0):
+			if ((j % 1000) == 0):
 				sys.stderr.write('\r[%d] snps = %d, insertions = %d, deletions = %d, undercovered = %d, coverage = %.2f' % (i, ret_snp_count[0], ret_insertion_count[0], ret_deletion_count[0], ret_num_undercovered_bases[0], (float(ret_coverage_sum[0])/float((i + 1)))));
 				sys.stderr.flush();
 		

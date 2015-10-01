@@ -65,7 +65,8 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 
 	for qname in sam_hash1.keys():
 		num_processed += 1;
-		sys.stderr.write('\rProcessed %d alignments...' % num_processed);
+		if ((num_processed % 1000) == 0):
+			sys.stderr.write('\rProcessed %d alignments...' % num_processed);
 
 		if (len(sam_hash1[qname]) > 0 and sam_hash1[qname][0].IsMapped() == True):
 			num_mapped_1 += 1;
@@ -146,7 +147,8 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 	num_processed = 0;
 	for qname in sam_hash2.keys():
 		num_processed += 1;
-		sys.stderr.write('\rProcessed %d alignments...' % num_processed);
+		if ((num_processed % 1000) == 0):
+			sys.stderr.write('\rProcessed %d alignments...' % num_processed);
 		sam_hash2_list = sam_hash2[qname];
 		if (len(sam_hash2_list) > 0):
 			if (sam_hash2_list[0].IsMapped() == True):
