@@ -254,30 +254,33 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 		summary_line_lt0bp = '';
 		summary_line_gt5000bp = '';
 
-		out_file_qnames_not_in_sam1 = out_summary_prefix + '_qnames_not_in_sam1.csv';
-		out_file_qnames_not_in_sam2 = out_summary_prefix + '_qnames_not_in_sam2.csv';
-		out_file_qnames_not_in_sam1_as_sam = out_summary_prefix + '_qnames_not_in_sam1.sam';
-		out_file_qnames_not_in_sam2_as_sam = out_summary_prefix + '_qnames_not_in_sam2.sam';
+		sam1_basename = os.path.splitext(os.path.basename(sam_file1))[0];
+		sam2_basename = os.path.splitext(os.path.basename(sam_file2))[0];
 
-		out_file_qnames_in_both_sam1_as_sam = out_summary_prefix + '_qnames_in_both-from_sam1.sam';
-		out_file_qnames_in_both_sam2_as_sam = out_summary_prefix + '_qnames_in_both-from_sam2.sam';
+		out_file_qnames_only_in_sam2 = out_summary_prefix + '_qnames_only_in_%s.csv' % (sam2_basename);
+		out_file_qnames_only_in_sam1 = out_summary_prefix + '_qnames_only_in_%s.csv' % (sam1_basename);
+		out_file_qnames_only_in_sam2_as_sam = out_summary_prefix + '_qnames_only_in_%s.sam' % (sam2_basename);
+		out_file_qnames_only_in_sam1_as_sam = out_summary_prefix + '_qnames_only_in_%ssam' % (sam1_basename);
+
+		out_file_qnames_in_both_sam1_as_sam = out_summary_prefix + '_qnames_in_both-alignments_from_%s.sam' % (sam1_basename);
+		out_file_qnames_in_both_sam2_as_sam = out_summary_prefix + '_qnames_in_both-alignments_from_%s.sam' % (sam2_basename);
 
 		try:
-			fp_out_qnames_not_in_sam1 = open(out_file_qnames_not_in_sam1, 'w');
-			fp_out_qnames_not_in_sam2 = open(out_file_qnames_not_in_sam2, 'w');
-			# fp_out_qnames_not_in_sam1.write('\n'.join(qnames_not_in_sam_file1) + '\n');
-			fp_out_qnames_not_in_sam1.write('\n'.join(['%e\t%s' % (value[0], value[1]) for value in sorted(qnames_not_in_sam_file1, key=lambda x: x[0])]) + '\n');
-			fp_out_qnames_not_in_sam2.write('\n'.join(['%e\t%s' % (value[0], value[1]) for value in sorted(qnames_not_in_sam_file2, key=lambda x: x[0])]) + '\n');
-			fp_out_qnames_not_in_sam1.close();
-			fp_out_qnames_not_in_sam2.close();
+			fp_out_qnames_only_in_sam2 = open(out_file_qnames_only_in_sam2, 'w');
+			fp_out_qnames_only_in_sam1 = open(out_file_qnames_only_in_sam1, 'w');
+			# fp_out_qnames_only_in_sam2.write('\n'.join(qnames_not_in_sam_file1) + '\n');
+			fp_out_qnames_only_in_sam2.write('\n'.join(['%e\t%s' % (value[0], value[1]) for value in sorted(qnames_not_in_sam_file1, key=lambda x: x[0])]) + '\n');
+			fp_out_qnames_only_in_sam1.write('\n'.join(['%e\t%s' % (value[0], value[1]) for value in sorted(qnames_not_in_sam_file2, key=lambda x: x[0])]) + '\n');
+			fp_out_qnames_only_in_sam2.close();
+			fp_out_qnames_only_in_sam1.close();
 
-			fp_out1 = open(out_file_qnames_not_in_sam1_as_sam, 'w');
+			fp_out1 = open(out_file_qnames_only_in_sam2_as_sam, 'w');
 			fp_out1.write('\n'.join(sam_headers2) + '\n');
 			for value in sorted(qnames_not_in_sam_file1, key=lambda x: x[0]):
 				fp_out1.write('\n'.join([sam_line.original_line for sam_line in sam_hash2[value[1]]]) + '\n');
 			fp_out1.close();
 
-			fp_out2 = open(out_file_qnames_not_in_sam2_as_sam, 'w');
+			fp_out2 = open(out_file_qnames_only_in_sam1_as_sam, 'w');
 			fp_out2.write('\n'.join(sam_headers1) + '\n');
 			for value in sorted(qnames_not_in_sam_file2, key=lambda x: x[0]):
 				fp_out2.write('\n'.join([sam_line.original_line for sam_line in sam_hash1[value[1]]]) + '\n');
@@ -296,7 +299,7 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 			fp_out2.close();
 
 		except IOError:
-			sys.stderr.write('ERROR: Could not open file(s) for writing! Either "%s" or "%s".\n' % (out_file_qnames_not_in_sam1, out_file_qnames_not_in_sam2));
+			sys.stderr.write('ERROR: Could not open file(s) for writing! Either "%s" or "%s".\n' % (out_file_qnames_only_in_sam2, out_file_qnames_only_in_sam1));
 
 	if (out_summary_prefix != ''):
 		fp_out.close();
@@ -317,11 +320,11 @@ if __name__ == "__main__":
 		sys.stderr.write('\tdistance_threshold - default value is 100\n');
 		sys.stderr.write('\n');
 		sys.stderr.write('\tSeveral files will be created on disk:\n');
-		sys.stderr.write('\t\t- <out_file_prefix>_qnames_not_in_sam1.csv\n');
-		sys.stderr.write('\t\t- <out_file_prefix>_qnames_not_in_sam1.sam\n');
+		sys.stderr.write('\t\t- <out_file_prefix>_qnames_only_in_sam2.csv\n');
+		sys.stderr.write('\t\t- <out_file_prefix>_qnames_only_in_sam2.sam\n');
 		sys.stderr.write('\t\t- <out_file_prefix>_qnames_in_both_sam1.sam\t- Alignments from SAM1 which are also mapped in SAM2.\n');
-		sys.stderr.write('\t\t- <out_file_prefix>_qnames_not_in_sam2.csv\n');
-		sys.stderr.write('\t\t- <out_file_prefix>_qnames_not_in_sam2.sam\n');
+		sys.stderr.write('\t\t- <out_file_prefix>_qnames_only_in_sam1.csv\n');
+		sys.stderr.write('\t\t- <out_file_prefix>_qnames_only_in_sam1.sam\n');
 		sys.stderr.write('\t\t- <out_file_prefix>_qnames_in_both_sam2.sam\t- Alignments from SAM2 which are also mapped in SAM1.\n');
 		sys.stderr.write('\t\t- <out_file_prefix>_lt0bp.csv\n');
 		sys.stderr.write('\t\t- <out_file_prefix>_gt5000bp.csv\n');
