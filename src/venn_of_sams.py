@@ -260,7 +260,7 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 		out_file_qnames_only_in_sam2 = out_summary_prefix + '_qnames_only_in_%s.csv' % (sam2_basename);
 		out_file_qnames_only_in_sam1 = out_summary_prefix + '_qnames_only_in_%s.csv' % (sam1_basename);
 		out_file_qnames_only_in_sam2_as_sam = out_summary_prefix + '_qnames_only_in_%s.sam' % (sam2_basename);
-		out_file_qnames_only_in_sam1_as_sam = out_summary_prefix + '_qnames_only_in_%ssam' % (sam1_basename);
+		out_file_qnames_only_in_sam1_as_sam = out_summary_prefix + '_qnames_only_in_%s.sam' % (sam1_basename);
 		out_file_qnames_in_both_sam1_as_sam = out_summary_prefix + '_qnames_in_both-alignments_from_%s.sam' % (sam1_basename);
 		out_file_qnames_in_both_sam2_as_sam = out_summary_prefix + '_qnames_in_both-alignments_from_%s.sam' % (sam2_basename);
 
