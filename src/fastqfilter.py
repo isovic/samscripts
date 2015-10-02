@@ -217,7 +217,7 @@ def base_quality_filter(input_fastq_path, lte_gte, qv_threshold, out_fastq_path,
 			(lte_gte == 'lte' and mean_qv <= qv_threshold) or
 			(lte_gte == 'eq' and mean_qv == qv_threshold)):
 
-			fp_out.write('\n'.join(read));
+			fp_out.write('\n'.join(read) + '\n');
 			num_outputted_reads += 1;
 		else:
 			num_skipped_reads += 1;
