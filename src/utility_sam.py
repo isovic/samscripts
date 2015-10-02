@@ -554,12 +554,128 @@ class SAMLine:
 		return True;
 
 	def CountErroneousWindows(self, window_len, min_error_rate):
-		min_error_rate = 0;
 		num_windows = 0;
 
-		# [cigar_count, cigar_op, pos_on_ref, pos_on_read] = self.CalcCigarStartingPositions(separate_matches_in_individual_bases=True);
+		cigars = self.CalcCigarStartingPositions(separate_matches_in_individual_bases=True);
 
-		# seq_len = len(self.seq);
+		# for cigar in cigars:
+		# 	[cigar_count, cigar_op, pos_on_ref, pos_on_read] = cigar;
+		# 	print cigar;
+
+		seq_len = len(self.seq);
+		window_start_base = 0;
+		window_end_base = 0;
+		window_cig_id = 0;
+
+		# while (cig_op[window_start_base])
+		real_bases = [];
+		real_bases_deletions = [];
+		real_bases_insertions = [];
+		i = 0;
+		while (i < seq_len):
+			real_bases.append('');
+			real_bases_deletions.append(0);
+			real_bases_insertions.append(0);
+			i += 1;
+		# real_bases = [['', 0]]*seq_len;
+		# print real_bases;
+
+		for cigar in cigars:
+			[cigar_count, cigar_op, pos_on_ref, pos_on_read] = cigar;
+			if (cigar_op in 'SIM=X'):
+				i = 0;
+				while (i < cigar_count):
+					try:
+						real_bases[pos_on_read + i] = cigar_op;
+					except Exception, e:
+						sys.stderr.write(str(e) + '\n');
+						print cigar;
+						print seq_len, pos_on_read, i, len(cigars);
+						print self.original_line;
+						exit(1);
+					if (cigar_op == 'I'):
+						real_bases_insertions[pos_on_read + i] = 1;
+					i += 1;
+			elif (cigar_op in 'D'):
+				real_bases_deletions[pos_on_read] = cigar_count;
+			else:	### 'H' operations
+				pass;
+
+		# i = 0;
+		# while (i < len(real_bases)):
+		# 	print i, real_bases[i], real_bases_insertions[i], real_bases_deletions[i];
+		# 	i += 1;
+		# print '';
+		# print seq_len;
+
+		i = 0;
+		while (i < seq_len):
+			if ((real_bases[i] in 'SH') == False):
+				break;
+			i += 1;
+		nonclip_start = i;
+		i = seq_len - 1;
+		while (i >= 0):
+			if ((real_bases[i] in 'SH') == False):
+				break;
+			i -= 1;
+		nonclip_end = i;
+
+		all_window_ratios = [];
+		all_windows_over_threshold = [];
+		window_start = nonclip_start;
+		window_end = window_start + window_len - 1;
+		while (window_end < nonclip_end):
+			window_ins = sum(real_bases_insertions[window_start:(window_end+1)]);
+			window_dels = sum(real_bases_deletions[window_start:(window_end+1)]);
+			window_errors = window_ins + window_dels;
+			window_ratio = float(window_errors) / float(window_len);
+			if (window_ratio > min_error_rate):
+				all_windows_over_threshold.append(window_ratio);
+				# print window_ratio, min_error_rate;
+								# print 'Tu sam 1!\n';
+			all_window_ratios.append(window_ratio);
+			window_start += 1;
+			window_end += 1;
+
+
+		num_over_threshold = len(all_windows_over_threshold);
+		num_windows = len(all_window_ratios);
+		err_window_rate = (float(num_over_threshold) / float(num_windows)) if (num_windows > 0) else (-1.0);
+
+		# print window_start;
+		# print window_end;
+		# print window_errors;
+		# print window_len;
+		# print window_ratio;
+
+		# print all_window_ratios;
+		# print  '';
+		# print all_windows_over_threshold;
+		# print len(all_windows_over_threshold);
+		# print 'threshold = %.2f' % (min_error_rate);
+		# print 'num_over_threshold = %d' % (num_over_threshold);
+		# print 'num_windows = %d' % (num_windows);
+		# print 'ratio = %.2f' % (float(num_over_threshold) / float(num_windows));
+
+		# # while ((window_start_base + window_len) < seq_len):
+		# # 	if ()
+		# while (True):
+		# 	if (cig_op[window_cig_id] in 'SH'):
+		# 		window_start_base += 1;
+		# 		continue;
+
+		# 	num_windows += 1;
+
+
+
+		# 	# if (cig_op[winodw_cig_id] == 'H'):
+		# 	# 	continue;
+
+		# 	if ((window_start_base + window_len) >= seq_len):
+		# 		break;
+		# 	break;
+
 		# if (self.clip_op_back == 'S'):
 		# 	seq_len -= self.clip_count_back;
 
@@ -568,8 +684,8 @@ class SAMLine:
 
 		# 	window_start += 1;
 
-		return [num_over_threshold, num_windows];
-	
+		return [err_window_rate, num_over_threshold, num_windows];
+		
 
 
 
