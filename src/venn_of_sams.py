@@ -198,6 +198,7 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 	summary_line += 'Number of qnames not present in SAM file 2: %d\n' % (not_in_sam_file2);
 	summary_line += 'Number of qnames mapped to different references: %d\n' % (num_different_reference);
 	summary_line += 'Number of alignments of different orientation: %d\n' % (num_different_orientation);
+	summary_line += 'Number of shared qnames: %d\n' % (len(shared_qnames.keys()));
 	summary_line += 'Mapped in SAM 1: %d\n' % (num_mapped_1);
 	summary_line += 'Unmapped in SAM 1: %d\n' % (num_not_mapped_1);
 	summary_line += 'Mapped in SAM 2: %d\n' % (num_mapped_2);

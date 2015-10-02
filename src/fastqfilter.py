@@ -181,6 +181,8 @@ def base_quality_stats(input_fastq_path):
 	fp_in.close();
 
 def base_quality_filter(input_fastq_path, lte_gte, qv_threshold, out_fastq_path, fp_out):
+	print 'lte_gte = "%s"' % (lte_gte);
+
 	try:
 		fp_in = open(input_fastq_path, 'r');
 	except:
@@ -193,7 +195,7 @@ def base_quality_filter(input_fastq_path, lte_gte, qv_threshold, out_fastq_path,
 
 	while True:
 		if ((num_reads % 1000) == 0):
-			sys.stderr.write('\rProcessing seq %d...' % num_reads);
+			sys.stderr.write('\rProcessing seq %d, (%d passed)...' % (num_reads, num_outputted_reads));
 
 		[header, read] = fastqparser.get_single_read(fp_in);
 		if (len(read) == 0):
@@ -209,11 +211,12 @@ def base_quality_filter(input_fastq_path, lte_gte, qv_threshold, out_fastq_path,
 			phreds.append(ord(char) - 33);
 		mean_qv = np.mean(phreds);
 
-		if ((lte_gte == '>' and mean_qv > qv_threshold) or
-			(lte_gte == '>=' and mean_qv >= qv_threshold) or
-			(lte_gte == '<' and mean_qv < qv_threshold) or
-			(lte_gte == '<=' and mean_qv <= qv_threshold) or
-			(lte_gte == '=' and mean_qv == qv_threshold)):
+		if ((lte_gte == 'gt' and mean_qv > qv_threshold) or
+			(lte_gte == 'gte' and mean_qv >= qv_threshold) or
+			(lte_gte == 'lt' and mean_qv < qv_threshold) or
+			(lte_gte == 'lte' and mean_qv <= qv_threshold) or
+			(lte_gte == 'eq' and mean_qv == qv_threshold)):
+
 			fp_out.write('\n'.join(read));
 			num_outputted_reads += 1;
 		else:
@@ -859,27 +862,27 @@ if __name__ == "__main__":
 		exit(0);
 
 	elif (sys.argv[1] == 'qvfilter'):
-		if (len(sys.argv) < 4 or len(sys.argv) > 5):
+		if (len(sys.argv) < 5 or len(sys.argv) > 6):
 			sys.stderr.write('Output only reads which have average base qualities above or below certain threshold.\n');
 			sys.stderr.write('Usage:\n');
 			sys.stderr.write('\t%s %s lte_gte threshold <input_fastq_file> [<out_filtered_fastq_file>]\n' % (os.path.basename(sys.argv[0]), sys.argv[1]));
 			sys.stderr.write('\n');
-			sys.stderr.write('\tlte_gte - Select which reads to output. Can be either "<", "<=", ">", ">=" or "=".\n');
+			sys.stderr.write('\tlte_gte - Select which reads to output. Can be either "lt", "lte", "gt", "gte" or "eq".\n');
 			sys.stderr.write('\n');
 			exit(0);
 
-		lte_gte = sys.argv[1];
-		qv_threshold = sys.argv[2];
-		input_fastq_path = sys.argv[3];
+		lte_gte = sys.argv[2];
+		qv_threshold = int(sys.argv[3]);
+		input_fastq_path = sys.argv[4];
 
-		if ((lte_gte in ['<', '<=', '>', '>=', '=']) == False):
+		if ((lte_gte in ['lt', 'lte', 'gt', 'gte', 'eq']) == False):
 			sys.stderr.write('ERROR: Incorrect value of the lte_gte parameter. Should be either "<" or ">".');
 			exit(1);
 
 		out_fastq_path = '';
 		fp_out = sys.stdout;
-		if (len(sys.argv) == 5):
-			out_fastq_path = sys.argv[4];
+		if (len(sys.argv) == 6):
+			out_fastq_path = sys.argv[5];
 			if (input_fastq_path == out_fastq_path):
 				sys.stderr.write('ERROR: Output and input files are the same! Exiting.\n');
 				exit(0);
