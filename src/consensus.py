@@ -132,7 +132,8 @@ def process_mpileup_line(line, line_number, ret_variant_list, ret_vcf_list, ret_
 	# if (non_indel_coverage_current_base < coverage_threshold):
 	if (int(coverage) < coverage_threshold):
 		ret_num_undercovered_bases[0] += 1;
-		ret_coverage_sum[0] += 0;
+		# ret_coverage_sum[0] += 0;
+		ret_coverage_sum[0] += int(coverage);	# TODO: Should I count total coverage of this base, or the non_indel_coverage_current_base?
 		sorted_base_counts = [['A', 0], ['C', 0], ['T', 0], ['G', 0]];
 		
 		sorted_base_counts = sorted(base_counts.items(), key=operator.itemgetter(1));

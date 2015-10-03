@@ -580,25 +580,32 @@ class SAMLine:
 		# real_bases = [['', 0]]*seq_len;
 		# print real_bases;
 
+		num_hardclipped_bases = 0;
 		for cigar in cigars:
 			[cigar_count, cigar_op, pos_on_ref, pos_on_read] = cigar;
 			if (cigar_op in 'SIM=X'):
 				i = 0;
 				while (i < cigar_count):
 					try:
-						real_bases[pos_on_read + i] = cigar_op;
+						real_bases[pos_on_read + i - num_hardclipped_bases] = cigar_op;
 					except Exception, e:
 						sys.stderr.write(str(e) + '\n');
 						print cigar;
-						print seq_len, pos_on_read, i, len(cigars);
-						print self.original_line;
+						print seq_len, pos_on_read, num_hardclipped_bases, i, len(cigars);
+						# print self.original_line;
+						print self.qname;
 						exit(1);
 					if (cigar_op == 'I'):
-						real_bases_insertions[pos_on_read + i] = 1;
+						real_bases_insertions[pos_on_read + i - num_hardclipped_bases] = 1;
 					i += 1;
 			elif (cigar_op in 'D'):
-				real_bases_deletions[pos_on_read] = cigar_count;
-			else:	### 'H' operations
+				real_bases_deletions[pos_on_read - num_hardclipped_bases] = cigar_count;
+			elif (cigar_op in 'H'):
+				### Hardclipped bases would cause a problem with the position of the bases in the cigar operation list.
+				### The pos_on_read is with the respect to the full read sequence, including the hardclipped bases which are not
+				### present in the self.seq string.
+				num_hardclipped_bases += cigar_count;
+			else:	### Whatever else may occur.
 				pass;
 
 		# i = 0;
