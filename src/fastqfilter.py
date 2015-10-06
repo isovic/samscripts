@@ -490,6 +490,7 @@ if __name__ == "__main__":
 		sys.stderr.write('\tgiheader\n');
 		sys.stderr.write('\tuniquify\n');
 		sys.stderr.write('\tqvfilter\n');
+		sys.stderr.write('\tinfo\n');
 
 		exit(0);
 
@@ -898,6 +899,42 @@ if __name__ == "__main__":
 			fp_out.close();
 
 		exit(0);
+
+	elif (sys.argv[1] == 'info'):
+		if (len(sys.argv) < 3 or len(sys.argv) > 4):
+			sys.stderr.write('Tool for obtaining basic stats from FASTA/FASTQ files, such as number of sequences, total sequence length, average sequence length, etc.\n');
+			sys.stderr.write('Usage:\n');
+			sys.stderr.write('\t%s %s <input_fastq_file> [<input_reference_file>]\n' % (os.path.basename(sys.argv[0]), sys.argv[1]));
+			sys.stderr.write('\n');
+			sys.stderr.write('\t<input_reference_file> - If a reference is given, coverage is caluclated using the Lander-Waterman equation.\n');
+			sys.stderr.write('\n');
+			exit(0);
+
+		input_fastq_path = sys.argv[2];
+		if (len(sys.argv) == 4):
+			reference_path = sys.argv[3];
+			[ref_ret_string, ref_num_seqs, ref_total_seq_len, ref_average_seq_len] = fastqparser.count_seq_length(reference_path);
+#			sys.stdout.write('Reference info:\n');
+			sys.stdout.write('(reference) Info for "%s".\n' % (reference_path));
+			sys.stdout.write(ref_ret_string);
+			sys.stdout.write('\n');
+
+		[ret_string, num_seqs, total_seq_len, average_seq_len] = fastqparser.count_seq_length(input_fastq_path);
+#		sys.stdout.write('FASTQ info:\n');
+		if (len(sys.argv) == 4):
+			sys.stdout.write('(reads) Info for "%s".\n' % (input_fastq_path));
+		else:
+			sys.stdout.write('Info for "%s".\n' % (input_fastq_path));
+		sys.stdout.write(ret_string);
+
+		if (len(sys.argv) == 4):
+			sys.stdout.write('\n');
+			sys.stdout.write('Coverage: %.2fx\n' % (float(total_seq_len) / float(ref_total_seq_len)));
+			sys.stdout.write('\n');
+
+		exit(0);
+
+
 
 	else:
 		sys.stderr.write('ERROR: Unknown subcommand!\n');

@@ -650,6 +650,12 @@ class SAMLine:
 		num_windows = len(all_window_ratios);
 		err_window_rate = (float(num_over_threshold) / float(num_windows)) if (num_windows > 0) else (-1.0);
 
+		# print seq_len;
+		# print len(real_bases);
+		# print self.CalcReadLengthFromCigar();
+		# print real_bases;
+		# exit(1);
+
 		# print window_start;
 		# print window_end;
 		# print window_errors;
