@@ -1517,6 +1517,8 @@ if __name__ == "__main__":
 		sys.stderr.write('\tgenerateAS\n');
 		sys.stderr.write('\tmarginalign\n');
 		sys.stderr.write('\tfixhnames\n');
+		sys.stderr.write('\tlongcigars\n');
+
 		exit(0);
 
 	if (sys.argv[1] == 'mapq'):
@@ -1907,7 +1909,7 @@ if __name__ == "__main__":
 		fix_sam_hnames(sam_file, reference_path, out_filtered_sam_file);
 		exit(0);
 
-	elif (sys.argv[1] == 'largecigars'):
+	elif (sys.argv[1] == 'longcigars'):
 		if (len(sys.argv) != 4):
 			sys.stderr.write('BAM file has a length limit on the number of CIGAR operations that it can store. The longer, erroneous reads might exceed these limits. Concretely, BAM format specification states:\n');
 			sys.stderr.write('\tflag nc\tFLAG<<16|n cigar op;19 n cigar op is the number of operations\tuint32 t\n');
@@ -1921,7 +1923,7 @@ if __name__ == "__main__":
 		if (sam_file == out_filtered_sam_file):
 			sys.stderr.write('ERROR: Output and input files are the same!\n');
 			exit(0);
-		
+
 		filter_large_cigar_ops(sam_file, (2**16)-1, out_filtered_sam_file);
 		exit(0);
 
