@@ -553,6 +553,16 @@ class SAMLine:
 
 		return True;
 
+	def GetNumCigarOps(self):
+		if (self.IsMapped() == False):
+			return 0;
+
+		if (self.line_fields_ok == False):
+			return 0;
+
+		split_cigar = self.SplitCigar();
+		return len(split_cigar);
+
 	def CountErroneousWindows(self, window_len, min_error_rate):
 		num_windows = 0;
 

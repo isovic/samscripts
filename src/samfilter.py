@@ -47,6 +47,8 @@ def filter_wrong_cigars(sam_file, out_filtered_sam_file):
 		if (sam_line.IsAlignmentSane() == True):
 			fp_out.write(line);
 			num_accepted += 1;
+
+
 		else:
 			sys.stderr.write('\tRejected: line: %d, qname: %s, len: %d\n' % (i, sam_line.qname, len(sam_line.seq)));
 			# print '\tRejected: line: %d, qname: %s, len: %d, CIGAR len: %d' % (i, sam_line.qname, len(sam_line.seq), cigar_len);
@@ -59,6 +61,56 @@ def filter_wrong_cigars(sam_file, out_filtered_sam_file):
 	sys.stderr.write('\n');
 	sys.stderr.write('Number of alignments with equal seq length and CIGAR length: %d (%.2f%%)\n' % (num_accepted, (float(num_accepted) / float(num_accepted + num_rejected)) * 100.0));
 	sys.stderr.write('Number of faulty alignments: %d (%.2f%%)\n' % (num_rejected, (float(num_rejected) / float(num_accepted + num_rejected)) * 100.0));
+
+def filter_large_cigar_ops(sam_file, max_cigar_ops, out_filtered_sam_file):
+	fp_in = None;
+	fp_out = None;
+	
+	try:
+		fp_in = open(sam_file, 'r');
+	except IOError:
+		sys.stderr.write('[%s] ERROR: Could not open file "%s" for reading!\n' % (__name__, sam_file));
+		exit(1);
+	
+	try:
+		fp_out = open(out_filtered_sam_file, 'w');
+	except IOError:
+		sys.stderr.write('[%s] ERROR: Could not open file "%s" for writing!\n' % (__name__, out_filtered_sam_file));
+		exit(1);
+	
+	num_accepted = 0;
+	num_rejected = 0;
+	
+	i = 0;
+	for line in fp_in:
+		sys.stderr.write('\rLine %d, num_accepted: %d, num_rejected: %d' % (i, num_accepted, num_rejected));
+		
+		if (len(line.strip()) == 0 or line[0] == '@'):
+			fp_out.write(line);
+			i += 1;
+			continue;
+		
+		sam_line = utility_sam.SAMLine(line.rstrip());
+		num_cigar_ops = sam_line.GetNumCigarOps();
+
+		if (num_cigar_ops <= max_cigar_ops):
+			fp_out.write(line);
+			num_accepted += 1;
+
+		else:
+			sys.stderr.write('\tRejected: line: %d, qname: %s, len: %d, num_cigar_ops: %d, max_cigar_ops: %d\n' % (i, sam_line.qname, len(sam_line.seq), num_cigar_ops, max_cigar_ops));
+			# print '\tRejected: line: %d, qname: %s, len: %d, CIGAR len: %d' % (i, sam_line.qname, len(sam_line.seq), cigar_len);
+			num_rejected += 1;
+		i += 1;
+	
+	fp_in.close();
+	fp_out.close();
+	
+	sys.stderr.write('\n');
+	sys.stderr.write('Number of good alignments: %d (%.2f%%)\n' % (num_accepted, (float(num_accepted) / float(num_accepted + num_rejected)) * 100.0));
+	sys.stderr.write('Number of faulty alignments: %d (%.2f%%)\n' % (num_rejected, (float(num_rejected) / float(num_accepted + num_rejected)) * 100.0));
+
+
 
 def filter_sam_by_mapq(sam_file, mapq_limit, out_filtered_sam_file):
 	fp_in = None;
@@ -1853,6 +1905,24 @@ if __name__ == "__main__":
 		if (len(sys.argv) == 5):
 			reference_path = sys.argv[5];
 		fix_sam_hnames(sam_file, reference_path, out_filtered_sam_file);
+		exit(0);
+
+	elif (sys.argv[1] == 'largecigars'):
+		if (len(sys.argv) != 4):
+			sys.stderr.write('BAM file has a length limit on the number of CIGAR operations that it can store. The longer, erroneous reads might exceed these limits. Concretely, BAM format specification states:\n');
+			sys.stderr.write('\tflag nc\tFLAG<<16|n cigar op;19 n cigar op is the number of operations\tuint32 t\n');
+			sys.stderr.write('This means that the BAM file can hold up to 2^16-1 CIGAR operations.\n\n');
+			sys.stderr.write('Usage:\n');
+			sys.stderr.write('\t%s %s <input_sam_file> <out_filtered_sam_file>\n' % (sys.argv[0], sys.argv[1]));
+			exit(0);
+
+		sam_file = sys.argv[2];
+		out_filtered_sam_file = sys.argv[3];
+		if (sam_file == out_filtered_sam_file):
+			sys.stderr.write('ERROR: Output and input files are the same!\n');
+			exit(0);
+		
+		filter_large_cigar_ops(sam_file, (2**16)-1, out_filtered_sam_file);
 		exit(0);
 
 
