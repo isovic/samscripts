@@ -471,6 +471,44 @@ def uniquify_headers(input_fastq_path, out_fastq_path, fp_out):
 	fp_in.close();
 	# return header_hash;
 
+def count_1d2d(input_fastq_path):
+	try:
+		fp_in = open(input_fastq_path, 'r');
+	except:
+		sys.stderr.write('ERROR: Could not open file "%s" for reading! Exiting.\n' % input_fastq_path);
+		exit(0);
+
+	num_reads = 0;
+	num_1d = 0;
+	num_2d = 0;
+
+	while True:
+		if ((num_reads % 100) == 0):
+			sys.stderr.write('\rProcessing seq %d...' % num_reads);
+
+		[header, read] = fastqparser.get_single_read(fp_in);
+		if (len(read) == 0):
+			break;
+
+		if (('twodir' in header.lower()) or ('2d' in header.lower())):
+			num_2d += 1;
+		else:
+			num_1d += 1;
+
+		num_reads += 1;
+
+	sys.stderr.write('\n');
+	
+	fp_in.close();
+
+	try:
+		sys.stdout.write('num_1d = %d (%.2f%%)\n' % (num_1d, (float(num_1d) / float(num_reads) * 100.0)));
+		sys.stdout.write('num_2d = %d (%.2f%%)\n' % (num_2d, (float(num_2d) / float(num_reads) * 100.0)));
+		sys.stdout.write('num_reads = %d\n' % (num_reads));
+	except Exception, e:
+		sys.stderr.write(str(e));
+		pass;
+
 if __name__ == "__main__":
 	if (len(sys.argv) < 2):
 		sys.stderr.write('Various filtering methods for FASTA/FASTQ files.\n');
@@ -491,6 +529,7 @@ if __name__ == "__main__":
 		sys.stderr.write('\tuniquify\n');
 		sys.stderr.write('\tqvfilter\n');
 		sys.stderr.write('\tinfo\n');
+		sys.stderr.write('\tcount1d2d\n');
 
 		exit(0);
 
@@ -934,6 +973,19 @@ if __name__ == "__main__":
 
 		exit(0);
 
+	elif (sys.argv[1] == 'count1d2d'):
+		if (len(sys.argv) < 3 or len(sys.argv) > 3):
+			sys.stderr.write('This is not an actual filter, but counts the number of 1d or 2d reads.\n');
+			sys.stderr.write('Usage:\n');
+			sys.stderr.write('\t%s %s <input_fastq_file>\n' % (os.path.basename(sys.argv[0]), sys.argv[1]));
+			sys.stderr.write('\n');
+			exit(0);
+
+		input_fastq_path = sys.argv[2];
+
+		count_1d2d(input_fastq_path);
+
+		exit(0);
 
 
 	else:

@@ -1486,6 +1486,76 @@ def fix_sam_hnames(sam_file, reference_path, out_filtered_sam_file):
 	except:
 		pass;
 
+def sam_info(sam_file):
+	fp_in = None;
+	fp_out = sys.stdout;
+	
+	try:
+		fp_in = open(sam_file, 'r');
+	except IOError:
+		sys.stderr.write('[%s] ERROR: Could not open file "%s" for reading!' % (__name__, sam_file));
+		exit(1);
+
+	num_unmapped = 0;
+	num_mapped_1d = 0;
+	num_unmapped_1d = 0;
+	num_mapped_2d = 0;
+	num_unmapped_2d = 0;
+	
+	i = 0;
+	for line in fp_in:
+		line = line.strip();
+		if (len(line) == 0 or line[0] == '@'):
+			continue;
+
+		i += 1;
+		sys.stderr.write('\rLine %d' % (i));
+
+		sam_line = utility_sam.SAMLine(line.rstrip());
+		# split_line = line.split('\t');
+
+		if (sam_line.IsMapped() == False):
+			num_unmapped += 1;
+
+		qname = sam_line.qname;
+		rname = sam_line.rname;
+
+#		if (('template' in qname) or ('complement' in qname)):
+		if (('2d' in qname) or ('2D' in qname) or ('twodir' in qname)):
+			if (sam_line.IsMapped() == True):
+				num_mapped_2d += 1;
+			else:
+				num_unmapped_2d += 1;
+		else:
+			if (sam_line.IsMapped() == True):
+				num_mapped_1d += 1;
+			else:
+				num_unmapped_1d += 1;
+
+	fp_in.close();
+
+	fp_out.write('num_mapped_1d = %d\n' % (num_mapped_1d));
+	fp_out.write('num_unmapped_1d = %d\n' % (num_unmapped_1d));
+	fp_out.write('num_mapped_2d = %d\n' % (num_mapped_2d));
+	fp_out.write('num_unmapped_2d = %d\n' % (num_unmapped_2d));
+
+	try:
+		fp_out.write('Percent of mapped reads which were 1d: %.2f%%\n' % (float(num_mapped_1d) / float(num_mapped_1d + num_mapped_2d) * 100.0));
+		fp_out.write('Percent of mapped reads which were 2d: %.2f%%\n' % (float(num_mapped_2d) / float(num_mapped_1d + num_mapped_2d) * 100.0));
+	except:
+		pass;
+
+	# fp_out.write('Percent mapped 2d over 1d: %.2f' % (float(num_mapped_2d) / float(num_mapped_1d)));
+	# fp_out.write('Percent mapped 1d over 1d: %.2f' % (float(num_mapped_2d) / float(num_mapped_1d)));
+	
+	sys.stderr.write('\n');
+	sys.stderr.write('Done!\n');
+	try:
+		sys.stderr.write('num_unmapped = %d (%.2f%%)\n' % (num_unmapped, (float(num_unmapped) / float(num_accepted + num_rejected)) * 100.0));
+		# sys.stderr.write('num_mapped_1d = %d (%.2f%%)\n' % (num_unmapped, (float(num_unmapped) / float(num_accepted + num_rejected)) * 100.0));
+	except:
+		pass;
+
 
 
 if __name__ == "__main__":
@@ -1518,6 +1588,8 @@ if __name__ == "__main__":
 		sys.stderr.write('\tmarginalign\n');
 		sys.stderr.write('\tfixhnames\n');
 		sys.stderr.write('\tlongcigars\n');
+		sys.stderr.write('\tinfo\n');
+
 
 		exit(0);
 
@@ -1925,6 +1997,17 @@ if __name__ == "__main__":
 			exit(0);
 
 		filter_large_cigar_ops(sam_file, (2**16)-1, out_filtered_sam_file);
+		exit(0);
+
+	elif (sys.argv[1] == 'info'):
+		if (len(sys.argv) < 3 or len(sys.argv) > 3):
+			sys.stderr.write('Changes the qnames and the rnames of alignments not to include special characters.\n');
+			sys.stderr.write('Usage:\n');
+			sys.stderr.write('\t%s %s <input_sam_file>\n' % (sys.argv[0], sys.argv[1]));
+			exit(0);
+
+		sam_file = sys.argv[2];
+		sam_info(sam_file);
 		exit(0);
 
 
