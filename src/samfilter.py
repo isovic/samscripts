@@ -1542,6 +1542,7 @@ def sam_info(sam_file, reads_file=None):
 
 	fp_in.close();
 
+	sys.stderr.write('\n');
 	fp_out.write('num_mapped_1d = %d\n' % (num_mapped_1d));
 	fp_out.write('num_unmapped_1d = %d\n' % (num_unmapped_1d));
 	fp_out.write('num_mapped_2d = %d\n' % (num_mapped_2d));
