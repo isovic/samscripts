@@ -1486,7 +1486,7 @@ def fix_sam_hnames(sam_file, reference_path, out_filtered_sam_file):
 	except:
 		pass;
 
-def sam_info(sam_file):
+def sam_info(sam_file, reads_file=None):
 	fp_in = None;
 	fp_out = sys.stdout;
 	
@@ -1501,7 +1501,7 @@ def sam_info(sam_file):
 	num_unmapped_1d = 0;
 	num_mapped_2d = 0;
 	num_unmapped_2d = 0;
-	
+
 	i = 0;
 	for line in fp_in:
 		line = line.strip();
@@ -1555,6 +1555,30 @@ def sam_info(sam_file):
 		# sys.stderr.write('num_mapped_1d = %d (%.2f%%)\n' % (num_unmapped, (float(num_unmapped) / float(num_accepted + num_rejected)) * 100.0));
 	except:
 		pass;
+
+	sys.stderr.write('Counting mapped reads...\n');
+	[num_alignments, num_mapped_alignments, num_unique_reads, num_mapped_reads, num_mapped_bases] = utility_sam.CountMappedReads(sam_file);
+	if (reads_file != None):
+		[fastqinfo_string, fastqinfo_num_seqs, fastqinfo_total_seq_len, fastqinfo_average_seq_len] = fastqparser.count_seq_length(reads_file);
+
+	sys.stderr.write('\n');
+	try:
+		summary_read_count = '';
+		summary_read_count += 'num_alignments: %d\n' % num_alignments;
+		summary_read_count += 'num_mapped_alignments: %d (%.2f%%)\n' % (num_mapped_alignments, (float(num_mapped_alignments) / float(num_alignments)) * 100.0);
+		summary_read_count += 'num_unmapped_alignments: %d (%.2f%%)\n' % ((num_alignments - num_mapped_alignments), (float(num_alignments - num_mapped_alignments) / float(num_alignments)) * 100.0);
+		summary_read_count += 'num_mapped_reads: %d\n' % num_mapped_reads;
+		summary_read_count += 'num_uniquely_mapped_reads: %d\n' % num_unique_reads;
+		summary_read_count += 'num_mapped_bases: %d\n' % num_mapped_bases;
+
+		if (reads_file != None):
+			summary_read_count += 'num_read_in_input_reads_file: %d\n' % (fastqinfo_num_seqs);
+			summary_read_count += 'num_bases_in_input_reads_file: %d\n' % (fastqinfo_total_seq_len);
+			summary_read_count += 'percent_mapped_reads: %.2f%%\n' % ((float(num_mapped_reads) / float(fastqinfo_num_seqs)) * 100.0);
+			summary_read_count += 'percent_mapped_bases: %.2f%%\n' % ((float(num_mapped_bases) / float(fastqinfo_total_seq_len)) * 100.0);
+		fp_out.write(summary_read_count + '\n');
+	except Exception, e:
+		sys.stderr.write(str(e) + '\n');
 
 
 
@@ -2000,14 +2024,17 @@ if __name__ == "__main__":
 		exit(0);
 
 	elif (sys.argv[1] == 'info'):
-		if (len(sys.argv) < 3 or len(sys.argv) > 3):
+		if (len(sys.argv) < 3 or len(sys.argv) > 4):
 			sys.stderr.write('Changes the qnames and the rnames of alignments not to include special characters.\n');
 			sys.stderr.write('Usage:\n');
-			sys.stderr.write('\t%s %s <input_sam_file>\n' % (sys.argv[0], sys.argv[1]));
+			sys.stderr.write('\t%s %s <input_sam_file> [<reads_fastq_path>]\n' % (sys.argv[0], sys.argv[1]));
 			exit(0);
 
 		sam_file = sys.argv[2];
-		sam_info(sam_file);
+		reads_path = None;
+		if (len(sys.argv) == 4):
+			reads_path = sys.argv[3];
+		sam_info(sam_file, reads_path);
 		exit(0);
 
 
