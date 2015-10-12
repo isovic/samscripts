@@ -1520,8 +1520,16 @@ def sam_info(sam_file, reads_file=None):
 		qname = sam_line.qname;
 		rname = sam_line.rname;
 
-#		if (('template' in qname) or ('complement' in qname)):
-		if (('2d' in qname) or ('2D' in qname) or ('twodir' in qname)):
+		### Since there is no well-defined standard for naming the 1d and 2d reads, give precedance to
+		### checking whether it's a template or a complement, and then check if it might be a 2d read.
+		### If all this fails, then it probably is not a nanopore read, but from some other technology,
+		### which means that it is definitely 1d.
+		if (('template' in qname) or ('complement' in qname)):
+			if (sam_line.IsMapped() == True):
+				num_mapped_1d += 1;
+			else:
+				num_unmapped_1d += 1;
+		elif (('2d' in qname) or ('2D' in qname) or ('twodir' in qname)):
 			if (sam_line.IsMapped() == True):
 				num_mapped_2d += 1;
 			else:
