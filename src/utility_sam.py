@@ -1393,6 +1393,12 @@ def CountMappedReads(sam_file):
 
 
 ### Counts the number of bases mapped to the same position in both SAMLines.
+### To clarify the algorithm: two arrays are generated, each being of size of the read (before clipping).
+### These will hold coordinates for each base on the reference.
+### Then, for each of the two, fill the 'M=X' array positions with their coordinates on the reference.
+### For the insertions, only a "-1" value is used, because this base is not actualy present on the reference.
+### Both query_sam and ref_sam need to have a "-1" at the same position to be counted as a true inserted base.
+### Deletions are not counted in this case.
 def CompareBasePositions(query_sam, ref_sam, switch_ins_and_dels=False):
 	qsam_ref_coords = [None] * query_sam.CalcReadLengthFromCigar();
 	rsam_ref_coords = [None] * ref_sam.CalcReadLengthFromCigar();

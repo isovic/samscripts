@@ -245,6 +245,7 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 
 	summary_line = 'Distance threshold to consider mappings same: %d\n' % distance_threshold;
 	summary_line += 'Number of same mappings: %d\n' % num_same_alignments;
+	summary_line += '(verbose) Number of same mappings: %d (%.2f%% in SAM1 / %.2f%% in SAM2) within %d bp distance.\n' % (num_same_alignments, float(num_same_alignments) / float(num_mapped_1 + num_not_mapped_1), float(num_same_alignments) / float(num_mapped_2 + num_not_mapped_2), distance_threshold);
 	summary_line += '\n';
 	sys.stdout.write(summary_line);
 	if (out_summary_prefix != ''):
