@@ -53,6 +53,7 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 	num_mapped_2 = 0;
 
 	qname_to_distance_hash = {};
+	qname_to_pos = {};
 	distance_count_hash = {};
 	distance_to_qname_hash = {};
 	distance_to_sam_hash = {};
@@ -90,8 +91,8 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 			qnames_not_in_sam_file2.append([sam_line_list1[0].evalue, qname]);
 			continue;
 
-		sorted_sam_line_list1 = sorted(sam_line_list1, key=lambda sam_line: (-sam_line.chosen_quality));
-		sorted_sam_line_list2 = sorted(sam_line_list2, key=lambda sam_line: (-sam_line.chosen_quality));
+		sorted_sam_line_list1 = sorted(sam_line_list1, key=lambda sam_line: ((not sam_line.IsMapped()), -sam_line.chosen_quality));
+		sorted_sam_line_list2 = sorted(sam_line_list2, key=lambda sam_line: ((not sam_line.IsMapped()), -sam_line.chosen_quality));
 		if (len(sorted_sam_line_list1) > 0 and len(sorted_sam_line_list2) > 0):
 
 			if (sorted_sam_line_list1[0].IsMapped() == False):
@@ -112,6 +113,7 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 			if (not (qname in shared_qnames)):
 				shared_qnames[qname] = 1;
 			qname_to_distance_hash[qname] = distance;
+			qname_to_pos[qname] = [sorted_sam_line_list1[0].clipped_pos, sorted_sam_line_list2[0].clipped_pos];
 			if (distance in distance_count_hash):
 				distance_count_hash[distance] += 1;
 				distance_to_qname_hash[distance].append(qname);
@@ -222,7 +224,8 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 	for distance in sorted(distance_to_qname_hash.keys()):
 		sorted_by_length = sorted(distance_to_sam_hash[distance], reverse=True, key=lambda sam_line: len(sam_line.seq));
 		# sorted_qnames = ['%s <%d, %d>' % (single_sam_line.qname, len(single_sam_line.seq), single_sam_line.mapq) for single_sam_line in sorted_by_length];
-		sorted_qnames = ['%s <%d>' % (single_sam_line.qname, len(single_sam_line.seq)) for single_sam_line in sorted_by_length];
+		positions = qname_to_pos[distance_to_qname_hash[distance]];
+		sorted_qnames = ['%s <len:%d, SAM1:%d, SAM2:%d>' % (single_sam_line.qname, len(single_sam_line.seq), positions[0], positions[1]) for single_sam_line in sorted_by_length];
 
 		sorted_qnames_above_length = [('%s' % (single_sam_line.qname)) for single_sam_line in sorted_by_length if (len(single_sam_line.seq) > length_threshold)];
 		if (distance == 0):
