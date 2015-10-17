@@ -53,7 +53,7 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 	num_mapped_2 = 0;
 
 	qname_to_distance_hash = {};
-	qname_to_pos = {};
+	qname_to_pos = [];
 	distance_count_hash = {};
 	distance_to_qname_hash = {};
 	distance_to_sam_hash = {};
