@@ -45,10 +45,19 @@ MODE_CODE_HEADER = (1 << 8);
 
 def print_usage_and_exit():
 	print 'Usage:';
-	print '\t%s [file|folder] mode_code <sam_path> <reference_path> <reads_path> [consensus_coverage_threshold] [<simulated_sam_path>]' % sys.argv[0];
+	print '\t%s file|folder mode_code <sam_path> <reference_path> <reads_path> [consensus_coverage_threshold] [<simulated_sam_path>]' % sys.argv[0];
 	print '';
 	print '\tmode_code\t0 Run all analyses.';
 	print '\t\t\t1 Only collect the results';
+	print '\t\t\thcalc';
+	print '\t\t\tcalc';
+	print '\t\t\thcollect';
+	print '\t\t\tcollect';
+	print '\t\t\thcalccons';
+	print '\t\t\tcalccons';
+	print '\t\t\thcalcerrors';
+	print '\t\t\tcalcerrors';
+	print '\t\t\t';
 	exit(1);
 
 def run_from_args(cmd_args):
@@ -81,6 +90,12 @@ def run_from_args(cmd_args):
 		mode_code = MODE_CODE_CALC_CONSENSUS | MODE_CODE_COLLECT_ERROR_RATE | MODE_CODE_COLLECT_ERROR_RATE_INDELS_AS_EVENTS | MODE_CODE_COLLECT_READ_COUNTS | MODE_CODE_HEADER;
 	elif (mode == 'calccons'):
 		mode_code = MODE_CODE_CALC_CONSENSUS | MODE_CODE_COLLECT_ERROR_RATE | MODE_CODE_COLLECT_ERROR_RATE_INDELS_AS_EVENTS | MODE_CODE_COLLECT_READ_COUNTS;
+
+	elif (mode == 'hcalcerrors'):
+		mode_code = MODE_CODE_COLLECT_CONSENSUS | MODE_CODE_CALC_ERROR_RATE | MODE_CODE_CALC_ERROR_RATE_INDELS_AS_EVENTS | MODE_CODE_COLLECT_READ_COUNTS | MODE_CODE_HEADER;
+	elif (mode == 'calcerrors'):
+		mode_code = MODE_CODE_COLLECT_CONSENSUS | MODE_CODE_CALC_ERROR_RATE | MODE_CODE_CALC_ERROR_RATE_INDELS_AS_EVENTS | MODE_CODE_COLLECT_READ_COUNTS;
+
 	else:
 		# mode_code = MODE_CODE_CALC_CONSENSUS | MODE_CODE_CALC_ERROR_RATE | MODE_CODE_CALC_READ_COUNTS;
 		mode_code = int(mode);
@@ -93,6 +108,7 @@ def run_from_args(cmd_args):
 		sys.stdout.write(analyze_single_sam(mode_code, sam_path, reference_file, reads_path, simulated_sam_path=simulated_sam_path, consensus_coverage_threshold=consensus_coverage_threshold));
 	elif (file_or_folder == 'folder'):
 		# analyze_all_sams_from_folder(sam_path, reference_file);
+		sys.stderr.write('Warning: Analysis of all SAMs in a given folder not implemented yet! Skipping.\n');
 		pass;
 	else:
 		print_usage_and_exit();
