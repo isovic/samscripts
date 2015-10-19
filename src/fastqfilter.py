@@ -564,6 +564,17 @@ def subsample(input_fastq_path, desired_coverage, ref_genome_size):
     sys.stderr.write('\n')
 
 
+def fastq2fasta(input_fastq_path):
+
+    if not (input_fastq_path.endswith('.fq') or input_fastq_path.endswith('.fastq')):
+        sys.stderr.write('\nUnrecognized file extension! Assuming fastq or fasta format!')
+
+    [headers, seqs, quals] = fastqparser.read_fastq(input_fastq_path)
+
+    for i in xrange(len(headers)):
+        newheader = headers[i].replace(':', ' ')
+        sys.stdout.write('>%s\n%s\n' % (newheader, seqs[i]))
+
 
 if __name__ == "__main__":
     if (len(sys.argv) < 2):
@@ -587,6 +598,7 @@ if __name__ == "__main__":
         sys.stderr.write('\tinfo\n');
         sys.stderr.write('\tcount1d2d\n');
         sys.stderr.write('\tsubsample\n')
+        sys.stderr.write('\tfastq2fasta\n')
 
         exit(0);
 
@@ -1058,6 +1070,21 @@ if __name__ == "__main__":
         ref_genome_size = int(sys.argv[4])
 
         subsample(input_fastq_path, desired_coverage, ref_genome_size)
+
+        exit(0);
+
+    elif (sys.argv[1] == 'fastq2fasta'):
+        if (len(sys.argv) < 3 or len(sys.argv) > 3):
+            sys.stderr.write('Outputs a given fastq file in fasta format\n')
+            sys.stderr.write('Additionally, replaces colons in header with spaces (relevant for running L&S pipeline).\n')
+            sys.stderr.write('Usage:\n')
+            sys.stderr.write('\t%s %s <input_fastq_file>\n' % (os.path.basename(sys.argv[0]), sys.argv[1]))
+            sys.stderr.write('\n')
+            exit(0);
+
+        input_fastq_path = sys.argv[2]
+
+        fastq2fasta(input_fastq_path)
 
         exit(0);
 
