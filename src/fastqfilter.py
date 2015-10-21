@@ -511,6 +511,38 @@ def count_1d2d(input_fastq_path):
         pass;
 
 
+
+def check_nanopore_paths(input_fastq_path, fast5_root_path):
+    try:
+        fp_in = open(input_fastq_path, 'r');
+    except:
+        sys.stderr.write('ERROR: Could not open file "%s" for reading! Exiting.\n' % input_fastq_path);
+        exit(0);
+
+    num_reads = 0;
+    num_wrong_paths = 0;
+
+    while True:
+        if ((num_reads % 1000) == 0):
+            sys.stderr.write('\rProcessing seq %d...' % num_reads);
+
+        [header, read] = fastqparser.get_single_read(fp_in);
+        if (len(read) == 0):
+            break;
+
+      	path_from_header = header.split()[-1];
+
+		if (os.path.exists('%s/%s' % (fast5_root_path, path_from_header)) == False):
+			num_wrong_paths += 1;
+			sys.stderr.write('[%d] ' % (num_wrong_paths));
+			sys.stdout.write('%s\n' % (header));
+
+        num_reads += 1;
+
+    sys.stderr.write('\n');
+
+    fp_in.close();
+
 ### Subsample
 # Subsampling calculates a total number of bases that should be in the result (according to a given coverage)
 # and then current total number of bases
@@ -597,8 +629,9 @@ if __name__ == "__main__":
         sys.stderr.write('\tqvfilter\n');
         sys.stderr.write('\tinfo\n');
         sys.stderr.write('\tcount1d2d\n');
-        sys.stderr.write('\tsubsample\n')
-        sys.stderr.write('\tfastq2fasta\n')
+        sys.stderr.write('\tsubsample\n');
+        sys.stderr.write('\tfastq2fasta\n');
+        sys.stderr.write('\tchecknanoporepaths\n');
 
         exit(0);
 
@@ -1088,6 +1121,20 @@ if __name__ == "__main__":
 
         exit(0);
 
+    elif (sys.argv[1] == 'checknanoporepaths'):
+        if (len(sys.argv) < 4 or len(sys.argv) > 4):
+            sys.stderr.write('This is not an actual filter, but counts the number of 1d or 2d reads.\n');
+            sys.stderr.write('Usage:\n');
+            sys.stderr.write('\t%s %s <input_fastq_file> <fast5_root_path>\n' % (os.path.basename(sys.argv[0]), sys.argv[1]));
+            sys.stderr.write('\n');
+            exit(0);
+
+        input_fastq_file = sys.argv[2];
+        fast5_root_path = sys.argv[3];
+
+        check_nanopore_paths(input_fastq_file, fast5_root_path);
+
+        exit(0);
 
     else:
         sys.stderr.write('ERROR: Unknown subcommand!\n');
