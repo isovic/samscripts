@@ -523,21 +523,21 @@ def check_nanopore_paths(input_fastq_path, fast5_root_path):
     num_wrong_paths = 0;
 
     while True:
-        if ((num_reads % 1000) == 0):
-            sys.stderr.write('\rProcessing seq %d...' % num_reads);
+		if ((num_reads % 1000) == 0):
+			sys.stderr.write('\rProcessing seq %d...' % num_reads);
 
-        [header, read] = fastqparser.get_single_read(fp_in);
-        if (len(read) == 0):
-            break;
+		[header, read] = fastqparser.get_single_read(fp_in);
+		if (len(read) == 0):
+			break;
 
-      	path_from_header = header.split()[-1];
+		path_from_header = header.split()[-1];
 
 		if (os.path.exists('%s/%s' % (fast5_root_path, path_from_header)) == False):
 			num_wrong_paths += 1;
 			sys.stderr.write('[%d] ' % (num_wrong_paths));
 			sys.stdout.write('%s\n' % (header));
 
-        num_reads += 1;
+		num_reads += 1;
 
     sys.stderr.write('\n');
 
@@ -1129,10 +1129,10 @@ if __name__ == "__main__":
             sys.stderr.write('\n');
             exit(0);
 
-        input_fastq_file = sys.argv[2];
+        input_fatq_path = sys.argv[2];
         fast5_root_path = sys.argv[3];
 
-        check_nanopore_paths(input_fastq_file, fast5_root_path);
+        check_nanopore_paths(input_fatq_path, fast5_root_path);
 
         exit(0);
 
