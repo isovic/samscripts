@@ -1167,7 +1167,7 @@ if __name__ == "__main__":
         exit(0);
 
     elif (sys.argv[1] == '1d' or sys.argv[1] == '2d'):
-        if (len(sys.argv) < 3 or len(sys.argv) > 3):
+        if (len(sys.argv) < 3 or len(sys.argv) > 4):
             sys.stderr.write('Extracts only reads with typical %s (nanopore) headers (those containing either "1d", "template" or "complement"; "2d" or "twodir" in their header).\n' % (sys.argv[1]));
             sys.stderr.write('Usage:\n');
             sys.stderr.write('\t%s %s <input_fastq_file> [<out_filtered_fastq_file>]\n' % (os.path.basename(sys.argv[0]), sys.argv[1]));
