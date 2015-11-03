@@ -51,6 +51,32 @@ def filter_seqs_by_header(input_fastq_path, header_patterns_path, out_fastq_path
     sys.stderr.write('\n');
     fp_in.close();
 
+def filter_seqs_by_header_list(input_fastq_path, filter_headers, out_fastq_path, fp_out):
+    try:
+        fp_in = open(input_fastq_path, 'r');
+    except:
+        sys.stderr.write('ERROR: Could not open file "%s" for reading! Exiting.\n' % input_fastq_path);
+        exit(0);
+
+    num_matches = 0;
+
+    while True:
+        [header, read] = fastqparser.get_single_read(fp_in);
+
+        if (len(read) == 0):
+            break;
+
+        for filter_header in filter_headers:
+            if ((filter_header[-1] == ';' and filter_header[0:-1].lower() == header.lower()) or
+                (filter_header[-1] != ';' and filter_header.lower() in header.lower())):
+                num_matches += 1;
+                sys.stderr.write('\rFound %d seqs, last: "%s".' % (num_matches, header));
+                fp_out.write('\n'.join(read) + '\n');
+                break;
+
+    sys.stderr.write('\n');
+    fp_in.close();
+
 def filter_duplicate_ncbi_id(input_fastq_path, out_fastq_path, fp_out):
     try:
         fp_in = open(input_fastq_path, 'r');
@@ -429,6 +455,8 @@ def enumerate_headers(input_fastq_path, out_fastq_path, fp_out):
 
         # read[1] = read[1].upper();
         read[0] = read[0][0] + str(current_read);
+        if (len(read) == 4):
+            read[2] = '+' + str(current_read);
         fp_out.write('\n'.join(read) + '\n');
 
     sys.stderr.write('\n');
@@ -632,6 +660,8 @@ if __name__ == "__main__":
         sys.stderr.write('\tsubsample\n');
         sys.stderr.write('\tfastq2fasta\n');
         sys.stderr.write('\tchecknanoporepaths\n');
+        sys.stderr.write('\t1d\n');
+        sys.stderr.write('\t2d\n');
 
         exit(0);
 
@@ -1134,6 +1164,39 @@ if __name__ == "__main__":
 
         check_nanopore_paths(input_fatq_path, fast5_root_path);
 
+        exit(0);
+
+    elif (sys.argv[1] == '1d' or sys.argv[1] == '2d'):
+        if (len(sys.argv) < 3 or len(sys.argv) > 3):
+            sys.stderr.write('Extracts only reads with typical %s (nanopore) headers (those containing either "1d", "template" or "complement"; "2d" or "twodir" in their header).\n' % (sys.argv[1]));
+            sys.stderr.write('Usage:\n');
+            sys.stderr.write('\t%s %s <input_fastq_file> [<out_filtered_fastq_file>]\n' % (os.path.basename(sys.argv[0]), sys.argv[1]));
+            sys.stderr.write('\n');
+            exit(0);
+
+        # header_patterns_path = sys.argv[2];
+        input_fastq_path = sys.argv[2];
+
+        out_fastq_path = '';
+        fp_out = sys.stdout;
+        if (len(sys.argv) == 4):
+            out_fastq_path = sys.argv[3];
+            if (input_fastq_path == out_fastq_path):
+                sys.stderr.write('ERROR: Output and input files are the same! Exiting.\n');
+                exit(0);
+            try:
+                fp_out = open(out_fastq_path, 'w');
+            except Exception, e:
+                sys.stderr.write(str(e));
+                exit(0);
+
+        if (sys.argv[1] == '1d'):
+            filter_seqs_by_header_list(input_fastq_path, ['1d', 'template', 'complement'], out_fastq_path, fp_out);
+        else:
+            filter_seqs_by_header_list(input_fastq_path, ['2d', 'twodir'], out_fastq_path, fp_out);
+
+        if (fp_out != sys.stdout):
+            fp_out.close();
         exit(0);
 
     else:
