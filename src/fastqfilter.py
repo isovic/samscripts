@@ -129,7 +129,7 @@ def join_fastq_lines(input_fastq_path, out_fastq_path, fp_out):
     sys.stderr.write('\n');
     fp_in.close();
 
-def filter_seqs_by_length(input_fastq_path, min_length, out_fastq_path, fp_out):
+def filter_seqs_by_length(input_fastq_path, length_threshold, is_less_than, out_fastq_path, fp_out):
     try:
         fp_in = open(input_fastq_path, 'r');
     except:
@@ -146,7 +146,7 @@ def filter_seqs_by_length(input_fastq_path, min_length, out_fastq_path, fp_out):
         if (len(read) == 0):
             break;
 
-        if (len(read[1]) >= min_length):
+        if ((is_less_than == False and len(read[1]) >= length_threshold) or (is_less_than == True and len(read[1] <= length_threshold))):
             num_matches += 1;
             if ((i % 1000) == 0):
                 sys.stderr.write('\rFound %d seqs, last: "%s".' % (num_matches, header));
@@ -643,7 +643,8 @@ if __name__ == "__main__":
         sys.stderr.write('\theader\n');
         sys.stderr.write('\tduplicateid\n');
         sys.stderr.write('\tjoin\n');
-        sys.stderr.write('\tlen\n');
+        sys.stderr.write('\tminlen\n');
+        sys.stderr.write('\tmaxlen\n');
         sys.stderr.write('\tqualstats\n');
         sys.stderr.write('\treverse\n');
         sys.stderr.write('\thardclip\n');
@@ -756,7 +757,7 @@ if __name__ == "__main__":
             fp_out.close();
         exit(0);
 
-    elif (sys.argv[1] == 'len'):
+    elif (sys.argv[1] == 'minlen'):
         if (len(sys.argv) < 4 or len(sys.argv) > 5):
             sys.stderr.write('Extracts only sequences which have length >= min_len.\n');
             sys.stderr.write('Usage:\n');
@@ -780,7 +781,37 @@ if __name__ == "__main__":
                 sys.stderr.write(e);
                 exit(0);
 
-        filter_seqs_by_length(input_fastq_path, min_length, out_fastq_path, fp_out);
+        filter_seqs_by_length(input_fastq_path, min_length, False, out_fastq_path, fp_out);
+
+        if (fp_out != sys.stdout):
+            fp_out.close();
+        exit(0);
+
+    elif (sys.argv[1] == 'maxlen'):
+        if (len(sys.argv) < 4 or len(sys.argv) > 5):
+            sys.stderr.write('Extracts only sequences which have length <= max_len.\n');
+            sys.stderr.write('Usage:\n');
+            sys.stderr.write('\t%s %s max_len <input_fastq_file> [<out_filtered_fastq_file>]\n' % (os.path.basename(sys.argv[0]), sys.argv[1]));
+            sys.stderr.write('\n');
+            exit(0);
+
+        max_length = int(sys.argv[2]);
+        input_fastq_path = sys.argv[3];
+
+        out_fastq_path = '';
+        fp_out = sys.stdout;
+        if (len(sys.argv) == 5):
+            out_fastq_path = sys.argv[4];
+            if (input_fastq_path == out_fastq_path):
+                sys.stderr.write('ERROR: Output and input files are the same! Exiting.\n');
+                exit(0);
+            try:
+                fp_out = open(out_fastq_path, 'w');
+            except Exception, e:
+                sys.stderr.write(e);
+                exit(0);
+
+        filter_seqs_by_length(input_fastq_path, max_length, True, out_fastq_path, fp_out);
 
         if (fp_out != sys.stdout):
             fp_out.close();
