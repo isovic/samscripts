@@ -146,7 +146,7 @@ def filter_seqs_by_length(input_fastq_path, length_threshold, is_less_than, out_
         if (len(read) == 0):
             break;
 
-        if ((is_less_than == False and len(read[1]) >= length_threshold) or (is_less_than == True and len(read[1] <= length_threshold))):
+        if ((is_less_than == False and len(read[1]) >= length_threshold) or (is_less_than == True and len(read[1]) <= length_threshold)):
             num_matches += 1;
             if ((i % 1000) == 0):
                 sys.stderr.write('\rFound %d seqs, last: "%s".' % (num_matches, header));
