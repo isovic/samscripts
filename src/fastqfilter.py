@@ -551,21 +551,21 @@ def check_nanopore_paths(input_fastq_path, fast5_root_path):
     num_wrong_paths = 0;
 
     while True:
-		if ((num_reads % 1000) == 0):
-			sys.stderr.write('\rProcessing seq %d...' % num_reads);
+        if ((num_reads % 1000) == 0):
+            sys.stderr.write('\rProcessing seq %d...' % num_reads);
 
-		[header, read] = fastqparser.get_single_read(fp_in);
-		if (len(read) == 0):
-			break;
+        [header, read] = fastqparser.get_single_read(fp_in);
+        if (len(read) == 0):
+            break;
 
-		path_from_header = header.split()[-1];
+        path_from_header = header.split()[-1];
 
-		if (os.path.exists('%s/%s' % (fast5_root_path, path_from_header)) == False):
-			num_wrong_paths += 1;
-			sys.stderr.write('[%d] ' % (num_wrong_paths));
-			sys.stdout.write('%s\n' % (header));
+        if (os.path.exists('%s/%s' % (fast5_root_path, path_from_header)) == False):
+            num_wrong_paths += 1;
+            sys.stderr.write('[%d] ' % (num_wrong_paths));
+            sys.stdout.write('%s\n' % (header));
 
-		num_reads += 1;
+        num_reads += 1;
 
     sys.stderr.write('\n');
 
@@ -636,6 +636,30 @@ def fastq2fasta(input_fastq_path):
         sys.stdout.write('>%s\n%s\n' % (newheader, seqs[i]))
 
 
+def length_distribution(input_path):
+    if (input_path.endswith('.fq') or input_path.endswith('.fastq')):
+        pass
+    elif (input_path.endswith('.fa') or input_path.endswith('.fasta')):
+        pass
+    else:
+        sys.stderr.write('\nUnrecognized file extension! Assuming fastq or fasta format!')
+
+    [headers, seqs, quals] = fastqparser.read_fastq(input_path)
+
+    distrib = {}
+    for i in xrange(len(headers)):
+        length = len(seqs[i])
+        if length in distrib:
+            distrib[length] += 1
+        else:
+            distrib[length] = 1
+
+    sys.stdout.write('\n\n%d sequences!' % len(distrib))
+    for length,count in distrib.iteritems():
+        sys.stdout.write('\n%d sequences of length %d' % (count, length))
+    sys.stdout.write('\n')
+
+
 if __name__ == "__main__":
     if (len(sys.argv) < 2):
         sys.stderr.write('Various filtering methods for FASTA/FASTQ files.\n');
@@ -661,6 +685,7 @@ if __name__ == "__main__":
         sys.stderr.write('\tsubsample\n');
         sys.stderr.write('\tfastq2fasta\n');
         sys.stderr.write('\tchecknanoporepaths\n');
+        sys.stderr.write('\tlength_distribution\n')
         sys.stderr.write('\t1d\n');
         sys.stderr.write('\t2d\n');
 
@@ -1184,18 +1209,34 @@ if __name__ == "__main__":
 
     elif (sys.argv[1] == 'checknanoporepaths'):
         if (len(sys.argv) < 4 or len(sys.argv) > 4):
-            sys.stderr.write('This is not an actual filter, but counts the number of 1d or 2d reads.\n');
-            sys.stderr.write('Usage:\n');
-            sys.stderr.write('\t%s %s <input_fastq_file> <fast5_root_path>\n' % (os.path.basename(sys.argv[0]), sys.argv[1]));
-            sys.stderr.write('\n');
-            exit(0);
+            sys.stderr.write('This is not an actual filter, but removes extra spaces from nanopore paths.\n')
+            sys.stderr.write('So that reads file can be used with nanopolish.\n')
+            sys.stderr.write('Usage:\n')
+            sys.stderr.write('\t%s %s <input_fastq_file> <fast5_root_path>\n' % (os.path.basename(sys.argv[0]), sys.argv[1]))
+            sys.stderr.write('\n')
+            exit(0)
 
-        input_fatq_path = sys.argv[2];
-        fast5_root_path = sys.argv[3];
+        input_fastq_path = sys.argv[2]
+        fast5_root_path = sys.argv[3]
 
-        check_nanopore_paths(input_fatq_path, fast5_root_path);
+        check_nanopore_paths(input_fastq_path, fast5_root_path)
+
+        exit(0)
+
+    elif (sys.argv[1] == 'length_distribution'):
+        if (len(sys.argv) < 3 or len(sys.argv) > 3):
+            sys.stderr.write('Outputs the distribution of reads in a fasta/fastq file.\n')
+            sys.stderr.write('Usage:\n')
+            sys.stderr.write('\t%s %s <input_file>\n' % (os.path.basename(sys.argv[0]), sys.argv[1]))
+            sys.stderr.write('\n')
+            exit(0)
+
+        input_path = sys.argv[2]
+        length_distribution(input_path)
 
         exit(0);
+
+
 
     elif (sys.argv[1] == '1d' or sys.argv[1] == '2d'):
         if (len(sys.argv) < 3 or len(sys.argv) > 4):
