@@ -595,7 +595,7 @@ def subsample(input_fastq_path, desired_coverage, ref_genome_size):
     ratio = float(desiredNumBases) / numBases
 
     if desiredNumBases > numBases:
-        sys.stderr.write('Insufficient data for coverage %d' % desired_coverage)
+        sys.stderr.write('Insufficient data for coverage %d\n' % desired_coverage)
         exit(1)
 
     sys.stderr.write('\n\nStatistics:')
@@ -622,6 +622,45 @@ def subsample(input_fastq_path, desired_coverage, ref_genome_size):
     sys.stderr.write('\nOutput bases: %i' % numOutputBases)
     sys.stderr.write('\nOutput seqs: %i' % numOutputSeqs)
     sys.stderr.write('\n')
+
+
+def getPaired(input_fastq_path, target_fastq_path):
+
+    if input_fastq_path.endswith('.fa') or input_fastq_path.endswith('.fasta'):
+        type = 'fasta'
+    elif input_fastq_path.endswith('.fq') or input_fastq_path.endswith('.fastq'):
+        type = 'fastq'
+    else:
+        sys.stderr.write('\nUnrecognized file extension! Assuming fasta format!')
+        type = 'fasta'
+
+    [iheaders, iseqs, iquals] = fastqparser.read_fastq(input_fastq_path)
+    [theaders, tseqs, tquals] = fastqparser.read_fastq(target_fastq_path)
+    sys.stderr.write('\n\nLoaded input and target files!\n')
+    sys.stderr.write('ilen = %d, tlen = %d \n' % (len(iheaders), len(theaders)))
+
+    sys.stderr.write('Hashing target file headers ...')
+    tdict = {}
+    for theader in theaders:
+        theader = theader.split()[0]
+        tdict[theader] = 1
+
+    for i in xrange(len(iheaders)):
+        iheader = iheaders[i]
+        iheader = iheader.split()[0]
+        if iheader in tdict:
+            if type == 'fasta':
+                sys.stdout.write('>%s\n%s\n' % (iheaders[i], iseqs[i]))
+            elif type == 'fastq':
+                sys.stdout.write('@%s\n%s\n+%s\n%s\n' % (iheaders[i], iseqs[i], iheaders[i], iquals[i]))
+            else:
+                exception('Critical Error! Invalid filetype')
+#        else:
+#            import pdb
+#            pdb.set_trace()
+
+        if (i%100 == 0):
+            sys.stderr.write('\nProcessed %d reads' % i)
 
 
 def fastq2fasta(input_fastq_path):
@@ -684,6 +723,7 @@ if __name__ == "__main__":
         sys.stderr.write('\tcount1d2d\n');
         sys.stderr.write('\tsubsample\n');
         sys.stderr.write('\tfastq2fasta\n');
+        sys.stderr.write('\tgetPairedHeaders\n');
         sys.stderr.write('\tchecknanoporepaths\n');
         sys.stderr.write('\tlength_distribution\n')
         sys.stderr.write('\t1d\n');
@@ -1189,6 +1229,23 @@ if __name__ == "__main__":
         ref_genome_size = int(sys.argv[4])
 
         subsample(input_fastq_path, desired_coverage, ref_genome_size)
+
+        exit(0);
+
+    elif (sys.argv[1] == 'getPairedHeaders'):
+        if (len(sys.argv) != 4 ):
+            sys.stderr.write('Outputs all fasta/fastq sequences for an input file, whose headers are present in a given target fasta/fastq file.\n')
+            sys.stderr.write('Prints results to stdout.\n')
+            sys.stderr.write('Useful when subsampling paired end reads in separate files.\n')
+            sys.stderr.write('Usage:\n')
+            sys.stderr.write('\t%s %s <input_fasta(q)_file> <target_fasta(q)_file>\n' % (os.path.basename(sys.argv[0]), sys.argv[1]))
+            sys.stderr.write('\n')
+            exit(0);
+
+        input_fastq_path = sys.argv[2]
+        target_fastq_path = sys.argv[3]
+
+        getPaired(input_fastq_path, target_fastq_path)
 
         exit(0);
 
