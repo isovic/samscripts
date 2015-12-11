@@ -385,6 +385,9 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 	# while (i < bed_pos_end): # len(lines)):
 	for line in fp:
 		# line = lines[i];
+		if (num_bases_to_skip > 0):
+			num_bases_to_skip -= 1;
+			continue;
 
 		if (use_bed == True):
 			line_split = line.strip().split('\t');
@@ -417,10 +420,6 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 		if (len(ret_vcf_list) > vcf_list_length and fp_vcf != None):
 			fp_vcf.write('\n'.join(ret_vcf_list[vcf_list_length:]) + '\n');
 			fp_vcf.flush();
-
-		while (num_bases_to_skip > 0):
-			fp.readline();
-			num_bases_to_skip -= 1;
 
 		i += num_bases_to_skip;
 		i += 1;
