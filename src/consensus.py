@@ -300,6 +300,7 @@ def process_mpileup_line(line, line_number, ret_variant_list, ret_vcf_list, ret_
 				vcf_line = '%s\t%s\t.\t%s\t%s\t%d\tPASS\t%s' % (ref_name, position, ref_field, alt_field, qual, info);
 				ret_vcf_list.append(vcf_line);
 				##################
+				return most_common_deletion_length;
 		else:
 			# In this case, either the base count consensus wins, or the
 			# insertion/deletion count is ambiguous.
@@ -416,6 +417,10 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 		if (len(ret_vcf_list) > vcf_list_length and fp_vcf != None):
 			fp_vcf.write('\n'.join(ret_vcf_list[vcf_list_length:]) + '\n');
 			fp_vcf.flush();
+
+		while (num_bases_to_skip > 0):
+			fp.readline();
+			num_bases_to_skip -= 1;
 
 		i += num_bases_to_skip;
 		i += 1;
