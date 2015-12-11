@@ -383,6 +383,7 @@ def process_mpileup(alignments_path, reference_path, mpileup_path, coverage_thre
 	i = 0 if (use_bed == False) else max((bed_pos_start - 10), 0);
 	j = 0;
 	# while (i < bed_pos_end): # len(lines)):
+	num_bases_to_skip = 0;
 	for line in fp:
 		# line = lines[i];
 		if (num_bases_to_skip > 0):
