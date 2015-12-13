@@ -66,7 +66,7 @@ def filter_seqs_by_read_id(input_fastq_path, read_id_path, out_fastq_path, fp_ou
 
     filter_read_ids = fp_filter.readlines();
     fp_filter.close();
-    filter_read_ids = [int(line.strip()) for line in filter_headers if (len(line.strip()) > 0)];
+    filter_read_ids = [int(line.strip()) for line in filter_read_ids if (len(line.strip()) > 0)];
     id_hash = {};
     for read_id in filter_read_ids:
         id_hash[read_id] = 1;
@@ -81,7 +81,7 @@ def filter_seqs_by_read_id(input_fastq_path, read_id_path, out_fastq_path, fp_ou
             break;
         if (num_reads in id_hash):
             num_matches += 1;
-            sys.stderr.write('\rFound %d seqs.' % (num_matches, header));
+            sys.stderr.write('\rFound %d seqs.' % (num_matches));
             fp_out.write('\n'.join(read) + '\n');
 
         num_reads += 1;
