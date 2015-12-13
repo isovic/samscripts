@@ -51,6 +51,44 @@ def filter_seqs_by_header(input_fastq_path, header_patterns_path, out_fastq_path
     sys.stderr.write('\n');
     fp_in.close();
 
+def filter_seqs_by_read_id(input_fastq_path, read_id_path, out_fastq_path, fp_out):
+    try:
+        fp_in = open(input_fastq_path, 'r');
+    except:
+        sys.stderr.write('ERROR: Could not open file "%s" for reading! Exiting.\n' % input_fastq_path);
+        exit(0);
+
+    try:
+        fp_filter = open(read_id_path, 'r');
+    except:
+        sys.stderr.write('ERROR: Could not open file "%s" for reading! Exiting.\n' % read_id_path);
+        exit(0);
+
+    filter_read_ids = fp_filter.readlines();
+    fp_filter.close();
+    filter_read_ids = [int(line.strip()) for line in filter_headers if (len(line.strip()) > 0)];
+    id_hash = {};
+    for read_id in filter_read_ids:
+        id_hash[read_id] = 1;
+
+    num_matches = 0;
+
+    num_reads = 0;
+    while True:
+        [header, read] = fastqparser.get_single_read(fp_in);
+
+        if (len(read) == 0):
+            break;
+        if (num_reads in id_hash):
+            num_matches += 1;
+            sys.stderr.write('\rFound %d seqs.' % (num_matches, header));
+            fp_out.write('\n'.join(read) + '\n');
+
+        num_reads += 1;
+
+    sys.stderr.write('\n');
+    fp_in.close();
+
 def filter_seqs_by_header_list(input_fastq_path, filter_headers, out_fastq_path, fp_out):
     try:
         fp_in = open(input_fastq_path, 'r');
@@ -728,6 +766,7 @@ if __name__ == "__main__":
         sys.stderr.write('\tlength_distribution\n')
         sys.stderr.write('\t1d\n');
         sys.stderr.write('\t2d\n');
+        sys.stderr.write('\treadid\n');
 
         exit(0);
 
@@ -1323,6 +1362,36 @@ if __name__ == "__main__":
             filter_seqs_by_header_list(input_fastq_path, ['1d', 'template', 'complement'], out_fastq_path, fp_out);
         else:
             filter_seqs_by_header_list(input_fastq_path, ['2d', 'twodir'], out_fastq_path, fp_out);
+
+        if (fp_out != sys.stdout):
+            fp_out.close();
+        exit(0);
+
+    elif (sys.argv[1] == 'readid'):
+        if (len(sys.argv) < 4 or len(sys.argv) > 5):
+            sys.stderr.write('Takes a FASTA/FASTQ file and a file containing seq IDs (0-offset). Extracts all seqs with given IDs.\n');
+            sys.stderr.write('Usage:\n');
+            sys.stderr.write('\t%s %s <input_id_file> <input_fastq_file> [<out_filtered_fastq_file>]\n' % (os.path.basename(sys.argv[0]), sys.argv[1]));
+            sys.stderr.write('\n');
+            exit(0);
+
+        read_id_path = sys.argv[2];
+        input_fastq_path = sys.argv[3];
+
+        out_fastq_path = '';
+        fp_out = sys.stdout;
+        if (len(sys.argv) == 5):
+            out_fastq_path = sys.argv[4];
+            if (input_fastq_path == out_fastq_path):
+                sys.stderr.write('ERROR: Output and input files are the same! Exiting.\n');
+                exit(0);
+            try:
+                fp_out = open(out_fastq_path, 'w');
+            except Exception, e:
+                sys.stderr.write(str(e));
+                exit(0);
+
+        filter_seqs_by_read_id(input_fastq_path, read_id_path, out_fastq_path, fp_out);
 
         if (fp_out != sys.stdout):
             fp_out.close();
