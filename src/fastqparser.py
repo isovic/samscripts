@@ -109,10 +109,10 @@ def get_single_read(fp):
 				line_string += line.rstrip();
 
 		elif (header_leading_char == '>'):
-			if (num_loaded_lines == 3 and next_char == sequence_separator):
+			if (num_loaded_lines == 1 and next_char == sequence_separator):
 				line_string += line.rstrip();
 				lines.append(line_string);
-				num_loaded_lines = 4;
+				num_loaded_lines = 2;
 				line_string = '';
 			else:
 				line_string += line.rstrip();
