@@ -736,6 +736,36 @@ def length_distribution(input_path):
         sys.stdout.write('\n%d sequences of length %d' % (count, length))
     sys.stdout.write('\n')
 
+def extract_subseqs(input_fastq_path, start_coord, end_coord, out_fastq_path, fp_out):
+    try:
+        fp_in = open(input_fastq_path, 'r');
+    except:
+        sys.stderr.write('ERROR: Could not open file "%s" for reading! Exiting.\n' % input_fastq_path);
+        exit(0);
+
+    num_matches = 0;
+
+    i = 0;
+    while True:
+        i += 1;
+        [header, read] = fastqparser.get_single_read(fp_in);
+
+        if (len(read) == 0):
+            break;
+
+        if (start_coord < len(read[1])):
+            current_end = end_coord if (end_coord < len(read[1])) else len(read[1]);
+            read[1] = read[1][start_coord:current_end];
+            if (len(read) == 4):
+                read[3] = read[3][start_coord:current_end];
+            fp_out.write('\n'.join(read) + '\n');
+
+        num_matches += 1;
+        if ((i % 1000) == 0):
+            sys.stderr.write('\rProcessed %d seqs.' % (num_matches));
+
+    sys.stderr.write('\n');
+    fp_in.close();
 
 if __name__ == "__main__":
     if (len(sys.argv) < 2):
@@ -767,6 +797,7 @@ if __name__ == "__main__":
         sys.stderr.write('\t1d\n');
         sys.stderr.write('\t2d\n');
         sys.stderr.write('\treadid\n');
+        sys.stderr.write('\tsubseqs\n');
 
         exit(0);
 
@@ -1392,6 +1423,37 @@ if __name__ == "__main__":
                 exit(0);
 
         filter_seqs_by_read_id(input_fastq_path, read_id_path, out_fastq_path, fp_out);
+
+        if (fp_out != sys.stdout):
+            fp_out.close();
+        exit(0);
+
+    elif (sys.argv[1] == 'subseqs'):
+        if (len(sys.argv) < 5 or len(sys.argv) > 6):
+            sys.stderr.write('Extracts bases from all sequences in a FASTA file between specified coordinates.\n');
+            sys.stderr.write('Usage:\n');
+            sys.stderr.write('\t%s %s <input_fastq_file> start end [<out_filtered_fastq_file>]\n' % (os.path.basename(sys.argv[0]), sys.argv[1]));
+            sys.stderr.write('\n');
+            exit(0);
+
+        input_fastq_path = sys.argv[2];
+        start_coord = int(sys.argv[3]);
+        end_coord = int(sys.argv[4]);
+
+        out_fastq_path = '';
+        fp_out = sys.stdout;
+        if (len(sys.argv) == 6):
+            out_fastq_path = sys.argv[5];
+            if (input_fastq_path == out_fastq_path):
+                sys.stderr.write('ERROR: Output and input files are the same! Exiting.\n');
+                exit(0);
+            try:
+                fp_out = open(out_fastq_path, 'w');
+            except Exception, e:
+                sys.stderr.write(str(e));
+                exit(0);
+
+        extract_subseqs(input_fastq_path, start_coord, end_coord, out_fastq_path, fp_out);
 
         if (fp_out != sys.stdout):
             fp_out.close();

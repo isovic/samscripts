@@ -3,3 +3,4 @@ src/*.pyc
 *~
 temp/
 test/
+test.fasta

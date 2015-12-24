@@ -432,6 +432,18 @@ class SAMLine:
 			i += 1;
 		return alignment_length;
 
+	# Counts all CIGAR ops separately and returns them as a dics.
+	def CountAlignmentOps(self):
+		split_cigar = self.SplitCigar();
+		op_counts = {};
+		for val in split_cigar:
+			[cig_count, cig_op] = val;
+			try:
+				op_counts[cig_op] += cig_count;
+			except:
+				op_counts[cig_op] = cig_count;
+		return op_counts;
+
 	# Given a base position within the read, find its position on the reference by inspecting CIGAR.
 	def FindBasePositionOnReference(self, base_position_in_read):
 		cigar_pos_list = self.CalcCigarStartingPositions(True);
