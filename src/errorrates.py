@@ -6,6 +6,7 @@
 
 import os;
 import sys;
+import subprocess
 import fastqparser;
 import utility_sam;
 
@@ -448,6 +449,10 @@ def ProcessSAM(references, sam_path, accuracy_counts_path, count_indels_as_event
 	try:
                 if sam_path == "-":
                         fp_sam = sys.stdin
+                elif sam_path.endswith(".bam"):
+                        # http://stackoverflow.com/questions/2804543/read-subprocess-stdout-line-by-line
+                        proc = subprocess.Popen(['samtools', 'view', sam_path], stdout=subprocess.PIPE)
+                        fp_sam = iter(proc.stdout.readline, '')
                 else:
                         fp_sam = open(sam_path, 'r');
 	except IOError:
@@ -486,7 +491,11 @@ def ProcessSAM(references, sam_path, accuracy_counts_path, count_indels_as_event
 	sys.stderr.flush();
 
         if fp_sam != sys.stdin:
-                fp_sam.close();
+                try:
+                        fp_sam.close();
+                except AttributeError:
+                        # fails for <type 'callable-iterator'> (samtools subprocess above)
+                        pass
 	fp_accuracy_counts.close();
 
 def ProcessFromFiles(reference_file, sam_path, out_accuracy_counts_path, count_indels_as_events=False):
@@ -527,6 +536,7 @@ if __name__ == "__main__":
 	# 	print_usage_and_exit();
 
 
+        # FIXME what if sam_file == -
 	out_path = os.path.dirname(sam_file) + '/analysis-error_rate';
 	if (out_path == ''):
 		out_path = './';
