@@ -435,7 +435,7 @@ class SAMLine:
 	# Counts all CIGAR ops separately and returns them as a dics.
 	def CountAlignmentOps(self):
 		split_cigar = self.SplitCigar();
-		op_counts = {};
+		op_counts = {'=': 0, 'X': 0, 'I': 0, 'D': 0};
 		for val in split_cigar:
 			[cig_count, cig_op] = val;
 			try:
@@ -457,6 +457,55 @@ class SAMLine:
 					return (pos_on_reference + (base_position_in_read - pos_on_read));
 			i += 1;
 		return -1;
+
+	# Given a base coordinate on the reference, find its position on the read.
+	def FindBasePositionOnRead(self, base_position_in_reference):
+		cigar_pos_list = self.CalcCigarStartingPositions(True);
+		i = 0;
+		while (i < len(cigar_pos_list)):
+			[cigar_count, cigar_op, pos_on_reference, pos_on_read] = cigar_pos_list[i];
+			if (cigar_op in 'M=XD'):
+				if (pos_on_reference == base_position_in_reference):
+					return pos_on_read;
+				elif (pos_on_reference < base_position_in_reference and (pos_on_reference + cigar_count) > base_position_in_reference):
+					return (pos_on_read + (base_position_in_reference - pos_on_reference));
+			i += 1;
+		return -1;
+
+	### Given a start and end position on the read, this function extracts all CIGAR events for bases inbetween. End position is inclusive.
+	def GetCigarBetweenBases(self, start_pos, end_pos):
+		cigar_pos_list = self.CalcCigarStartingPositions(True);
+		
+		start_event = -1;
+		end_event = -1;
+
+		for i in xrange(0, len(cigar_pos_list)):
+			[cigar_count, cigar_op, pos_on_reference, pos_on_read] = cigar_pos_list[i];
+			if (cigar_op in 'M=XI'):
+				if (pos_on_read == start_pos):
+					start_event = i;
+					break;
+				elif (pos_on_read < start_pos and (pos_on_read + cigar_count) > start_pos):
+					start_event = i;
+					break;
+
+		if (start_event == -1):
+			return [];
+
+		for i in xrange(start_event, len(cigar_pos_list)):
+			[cigar_count, cigar_op, pos_on_reference, pos_on_read] = cigar_pos_list[i];
+			if (cigar_op in 'M=XI'):
+				if (pos_on_read == end_pos):
+					end_event = i;
+					break;
+				elif (pos_on_read < end_pos and (pos_on_read + cigar_count) > end_pos):
+					end_event = i;
+					break;
+
+		if (end_event == -1):
+			return [];
+
+		return cigar_pos_list[start_event:(end_event+1)];
 
 	# Splits the CIGAR string into individual operations, and determines their starting positions
 	# on the reference. I.e. this function identifies the positions of matches, mismatches and deletions.

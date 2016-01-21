@@ -222,16 +222,29 @@ def count_seq_length(fastq_path):
 
 	# read_length_stats = [np.mean(all_read_lengths), np.std(all_read_lengths), np.median(all_read_lengths), np.min(all_read_lengths), np.max(all_read_lengths)];
 
-	total_seq_len = sum(all_read_lengths);
-	average_seq_len = float(np.mean(all_read_lengths));
-	max_seq_len = np.max(all_read_lengths);
+	if (len(all_read_lengths) > 0):
+		total_seq_len = sum(all_read_lengths);
+		average_seq_len = float(np.mean(all_read_lengths));
+		min_seq_len = np.min(all_read_lengths);
+		max_seq_len = np.max(all_read_lengths);
+		std_seq_len = float(np.std(all_read_lengths));
+		median_seq_len = float(np.median(all_read_lengths));
+	else:
+		total_seq_len = 0;
+		average_seq_len = 0.0;
+		min_seq_len = 0;
+		max_seq_len = 0;
+		std_seq_len = 0.0;
+		median_seq_len = 0;
+		sys.stderr.write('Warning: No sequences were loaded from file "%s" (function: fastqparser.count_seq_length).\n' % (fastq_path));
+		sys.stderr.flush();
 
 	ret_string = 'Number of sequences: %d\n' % num_seqs;
 	ret_string += 'Total sequence length: %d\n' % total_seq_len;
 	ret_string += 'Average sequence length: %.2f\n' % average_seq_len;
-	ret_string += 'STD of sequence lengths: %.2f\n' % float(np.std(all_read_lengths));
-	ret_string += 'Median of sequence lengths: %.2f\n' % float(np.median(all_read_lengths));
-	ret_string += 'Min sequence length: %d\n' % np.min(all_read_lengths);
+	ret_string += 'STD of sequence lengths: %.2f\n' % std_seq_len;
+	ret_string += 'Median of sequence lengths: %.2f\n' % median_seq_len;
+	ret_string += 'Min sequence length: %d\n' % min_seq_len;
 	ret_string += 'Max sequence length: %d\n' % max_seq_len;
 	
 	return [ret_string, num_seqs, total_seq_len, average_seq_len, max_seq_len];

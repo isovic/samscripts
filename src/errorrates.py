@@ -365,7 +365,7 @@ def CollectAccuracy(sam_path, accuracy_path, suppress_error_messages=False):
 	lines_error_rates += 'Deletion rate:  \t%s\n' % ('\t'.join(['%2.2f%%' % (100.0 * deletion_rate_stats[i]) for i in range(len(error_rate_stats))]));
 	lines_error_rates += 'Mismatch rate:  \t%s\n' % ('\t'.join(['%2.2f%%' % (100.0 * mismatch_rate_stats[i]) for i in range(len(error_rate_stats))]));
 	lines_error_rates += 'Match rate:     \t%s\n' % ('\t'.join(['%2.2f%%' % (100.0 * match_rate_stats[i]) for i in range(len(error_rate_stats))]));
-	lines_error_rates += 'Read length:    \t%s\n' % ('\t'.join(['%.2f' % (100.0 * read_length_stats[i]) for i in range(len(error_rate_stats))]));
+	lines_error_rates += 'Read length:    \t%s\n' % ('\t'.join(['%.2f' % (read_length_stats[i]) for i in range(len(error_rate_stats))]));
 
 	insertion_ratio = int((insertion_rate_stats[0]/error_rate_stats[0]) * 100);
 	deletion_ratio = int((deletion_rate_stats[0]/error_rate_stats[0]) * 100);
