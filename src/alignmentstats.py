@@ -259,7 +259,7 @@ def analyze_single_sam(mode_code, sam_file, reference_file, reads_file, simulate
 	fp.write(summary_file_sam_headers + '\n');
 
 	# Calculate the input reads statistics.
-	[fastqinfo_string, fastqinfo_num_seqs, fastqinfo_total_seq_len, fastqinfo_average_seq_len] = fastqparser.count_seq_length(reads_file);
+	[fastqinfo_string, fastqinfo_num_seqs, fastqinfo_total_seq_len, fastqinfo_average_seq_len, temp_max_seq_len] = fastqparser.count_seq_length(reads_file);
 	summary_reads_file = '';
 	summary_reads_file += 'Number of reads in the input file: %d\n' % (fastqinfo_num_seqs);
 	summary_reads_file += 'Total number of bases in the input reads file: %d\n' % (fastqinfo_total_seq_len);

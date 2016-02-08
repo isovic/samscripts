@@ -225,11 +225,11 @@ def PlotErrorRates(error_rate_hist, insertion_hist, deletion_hist, snp_hist, mat
 	
 	
 	xvalues = range(0, 101);
-	ax1.plot(xvalues_insertion, y_insertion_hist, label='Insertions (I)', linewidth=2);
-	ax1.plot(xvalues_deletion, y_deletion_hist, label='Deletions (D)', linewidth=2);
-	ax1.plot(xvalues_snp, y_snp_hist, label='Mismatches (M)', linewidth=2);
+	ax1.plot(xvalues_insertion, y_insertion_hist, label='Insertion rate (I)', linewidth=2);
+	ax1.plot(xvalues_deletion, y_deletion_hist, label='Deletion rate (D)', linewidth=2);
+	ax1.plot(xvalues_snp, y_snp_hist, label='Mismatch rate (M)', linewidth=2);
 	ax1.plot(xvalues_error_rate, y_error_rate_hist, label='I + D + M', linewidth=2);
-	ax1.plot(xvalues_match_rate, y_match_hist, 'k--', label='Matches', linewidth=2);
+	ax1.plot(xvalues_match_rate, y_match_hist, 'k--', label='Match rate', linewidth=2);
 	
 	fontP = FontProperties()
 	# fontP.set_size('small')
