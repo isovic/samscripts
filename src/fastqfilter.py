@@ -12,6 +12,7 @@ import sys
 import fastqparser
 import numpy as np
 import random
+import operator;
 
 
 
@@ -767,6 +768,22 @@ def extract_subseqs(input_fastq_path, start_coord, end_coord, out_fastq_path, fp
     sys.stderr.write('\n');
     fp_in.close();
 
+def msa2fasta(input_path, fp_out):
+    [headers, seqs, quals] = fastqparser.read_fastq(input_path)
+    for i in xrange(0, len(seqs)):
+        seqs[i] = seqs[i].upper();
+
+    cons_seq = '';
+    for i in xrange(0, len(seqs[0])):
+        base_counts = {'A': 0, 'C': 0, 'T': 0, 'G': 0, '.': 0, '-': 0};
+        for j in xrange(0, len(seqs)):
+            base_counts[seqs[j][i]] += 1;
+        sorted_base_counts = sorted(base_counts.items(), key=operator.itemgetter(1));
+        # Print sorted_base_counts;
+        if ((sorted_base_counts[-1][0] in '.-') == False):
+            cons_seq += sorted_base_counts[-1][0]
+    fp_out.write('>Consensus_from_MSA\n%s\n' % (cons_seq));
+
 if __name__ == "__main__":
     if (len(sys.argv) < 2):
         sys.stderr.write('Various filtering methods for FASTA/FASTQ files.\n');
@@ -798,6 +815,7 @@ if __name__ == "__main__":
         sys.stderr.write('\t2d\n');
         sys.stderr.write('\treadid\n');
         sys.stderr.write('\tsubseqs\n');
+        sys.stderr.write('\tmsa2fasta\n');
 
         exit(0);
 
@@ -1458,6 +1476,35 @@ if __name__ == "__main__":
         if (fp_out != sys.stdout):
             fp_out.close();
         exit(0);
+
+    elif (sys.argv[1] == 'msa2fasta'):
+        if (len(sys.argv) < 3 or len(sys.argv) > 4):
+            sys.stderr.write('Takes a multifasta file of multiple sequence alignments, and produces a majority vote consensus. Only [ACTG] bases are considered for output. Gaps in the input file are denoted by either a \'.\' or a \'-\'.\n');
+            sys.stderr.write('Usage:\n')
+            sys.stderr.write('\t%s %s <input_file> [<out_filtered_fastq_file>]\n' % (os.path.basename(sys.argv[0]), sys.argv[1]))
+            sys.stderr.write('\n')
+            exit(0)
+
+        input_fastq_path = sys.argv[2];
+
+        out_fastq_path = '';
+        fp_out = sys.stdout;
+        if (len(sys.argv) == 4):
+            out_fastq_path = sys.argv[3];
+            if (input_fastq_path == out_fastq_path):
+                sys.stderr.write('ERROR: Output and input files are the same! Exiting.\n');
+                exit(0);
+            try:
+                fp_out = open(out_fastq_path, 'w');
+            except Exception, e:
+                sys.stderr.write(str(e));
+                exit(0);
+
+        msa2fasta(input_fastq_path, fp_out)
+
+        if (fp_out != sys.stdout):
+            fp_out.close();
+        exit(0);        
 
     else:
         sys.stderr.write('ERROR: Unknown subcommand!\n');
