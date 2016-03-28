@@ -234,6 +234,7 @@ def PlotErrorRates(error_rate_hist, insertion_hist, deletion_hist, snp_hist, mat
 	fontP = FontProperties()
 	# fontP.set_size('small')
 	fontP.set_size(14)
+	# plt.xlim([0, 35]);
 	ax1.grid();
 	ax1.legend(prop=fontP, loc='upper right');
 

@@ -1274,7 +1274,7 @@ if __name__ == "__main__":
             sys.stdout.write(ref_ret_string);
             sys.stdout.write('\n');
 
-        [ret_string, num_seqs, total_seq_len, average_seq_len] = fastqparser.count_seq_length(input_fastq_path);
+        [ret_string, num_seqs, total_seq_len, average_seq_len, max_seq_len] = fastqparser.count_seq_length(input_fastq_path);
 #        sys.stdout.write('FASTQ info:\n');
         if (len(sys.argv) == 4):
             sys.stdout.write('(reads) Info for "%s".\n' % (input_fastq_path));

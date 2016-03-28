@@ -63,6 +63,8 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 
 	qnames_not_in_sam_file1 = [];
 	qnames_not_in_sam_file2 = [];
+	qnames_different_ref = [];
+	qnames_different_orient = [];
 
 	for qname in sam_hash1.keys():
 		num_processed += 1;
@@ -83,9 +85,10 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 		sam_line_list_2 = [];
 		try:
 			sam_line_list2 = sam_hash2[qname];
-			if (len(sam_line_list2) > 0 and sam_line_list2[0].IsMapped() == False):
+			if (len(sam_line_list2) == 0 or (len(sam_line_list2) > 0 and sam_line_list2[0].IsMapped() == False)):
 				not_in_sam_file2 += 1;
 				qnames_not_in_sam_file2.append([sam_line_list1[0].evalue, qname]);
+				continue;
 		except:
 			not_in_sam_file2 += 1;
 			qnames_not_in_sam_file2.append([sam_line_list1[0].evalue, qname]);
@@ -104,9 +107,11 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 
 			if (not ((sorted_sam_line_list1[0].rname in sorted_sam_line_list2[0].rname) or (sorted_sam_line_list2[0].rname in sorted_sam_line_list1[0].rname))):
 				num_different_reference += 1;
+				qnames_different_ref.append(qname);
 				continue;
 			if (sorted_sam_line_list1[0].IsReverse() != sorted_sam_line_list2[0].IsReverse()):
 				num_different_orientation += 1;
+				qnames_different_orient.append(qname);
 				continue;
 
 			distance = abs(sorted_sam_line_list1[0].clipped_pos - sorted_sam_line_list2[0].clipped_pos);
@@ -246,6 +251,18 @@ def CompareTwoSAMs(sam_file1, sam_file2, distance_threshold, out_summary_prefix=
 		if (out_summary_prefix != ''):
 			fp_out.write(summary_line);
 		summary_line = '';
+
+	summary_line = '\n';
+	summary_line += 'Qnames that map to different references (total: %d):\n' % (len(qnames_different_ref));
+	for qname_different_ref in qnames_different_ref:
+		summary_line += '\t' + qname_different_ref + '\n';
+	summary_line += '\n';
+	summary_line += 'Qnames that map to different orientations (total: %d):\n' % (len(qnames_different_orient));
+	for qname_different_orient in qnames_different_orient:
+		summary_line += '\t' + qname_different_orient + '\n';
+	summary_line += '\n';
+	if (out_summary_prefix != ''):
+		fp_out.write(summary_line);
 
 	summary_line = 'Distance threshold to consider mappings same: %d\n' % distance_threshold;
 	summary_line += 'Number of same mappings: %d\n' % num_same_alignments;
