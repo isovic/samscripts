@@ -784,6 +784,23 @@ def msa2fasta(input_path, fp_out):
             cons_seq += sorted_base_counts[-1][0]
     fp_out.write('>Consensus_from_MSA\n%s\n' % (cons_seq));
 
+def separate_seqs(input_fastq_file, out_folder):
+    if (not os.path.exists(out_folder)):
+        os.makedirs(out_folder);
+
+    [headers, seqs, quals] = fastqparser.read_fastq(input_fastq_file);
+
+    for i in xrange(len(seqs)):
+        fp = open('%s/%d.fast%c' % (out_folder, (i+1), input_fastq_file[-1]), 'w');
+        # fp = open('%s/%d' % (out_folder, (i+1)), 'w');
+        if (len(quals[i]) == 0):
+            fp.write('>%s\n%s\n' % (headers[i], seqs[i]));
+        else:
+            fp.write('@%s\n%s\n+\n%s\n' % (headers[i], seqs[i], quals[i]));
+    fp.close();
+
+
+
 if __name__ == "__main__":
     if (len(sys.argv) < 2):
         sys.stderr.write('Various filtering methods for FASTA/FASTQ files.\n');
@@ -816,6 +833,7 @@ if __name__ == "__main__":
         sys.stderr.write('\treadid\n');
         sys.stderr.write('\tsubseqs\n');
         sys.stderr.write('\tmsa2fasta\n');
+        sys.stderr.write('\tseparate\n');
 
         exit(0);
 
@@ -1505,6 +1523,19 @@ if __name__ == "__main__":
         if (fp_out != sys.stdout):
             fp_out.close();
         exit(0);        
+
+    elif (sys.argv[1] == 'separate'):
+        if (len(sys.argv) < 4 or len(sys.argv) > 4 ):
+            sys.stderr.write('Separate a FASTA/FASTQ file into individual sequence files. File names will be numbers assigned to sequences sequentially.\n');
+            sys.stderr.write('Usage:\n');
+            sys.stderr.write('\t%s %s <input_fastq_file> <out_folder>\n' % (os.path.basename(sys.argv[0]), sys.argv[1]));
+            sys.stderr.write('\n');
+            exit(0);
+
+        input_fastq_path = sys.argv[2];
+        out_folder = sys.argv[3];
+
+        separate_seqs(input_fastq_path, out_folder);
 
     else:
         sys.stderr.write('ERROR: Unknown subcommand!\n');
