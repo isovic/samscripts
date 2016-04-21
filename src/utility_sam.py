@@ -298,7 +298,7 @@ class SAMLine:
 		if (self.IsMapped() == False):
 			return cigar_operations;
 		while i < len(self.cigar):
-			if (self.cigar[i] in CIGAR_OPERATIONS_EXTENDED):
+			if (self.cigar[i] in CIGAR_OPERATIONS_ALL):
 				cigar_operations.append([int(cigarcount_string), self.cigar[i]]);
 				cigarcount_string = '';
 			else:
@@ -383,6 +383,10 @@ class SAMLine:
 				extcigar += '%s%s' % (opsize, optype)
 			elif optype == 'H':
 				extcigar += '%s%s' % (opsize, optype)
+			# Ns behave same as Ds
+			elif optype == 'N':
+				refpos += opsize
+				extcigar += '%s%s' % (opsize, optype)
 			else:
 				print 'ERROR: Faulty basic CIGAR string operation!'
 				print 'operation: %s%s' % (opsize, optype)
@@ -447,6 +451,10 @@ class SAMLine:
 				refpos += opsize
 				extcigar += '%s%s' % (opsize, optype)
 			elif optype == 'H':
+				extcigar += '%s%s' % (opsize, optype)
+			# Ns behave same as Ds
+			elif optype == 'N':
+				refpos += opsize
 				extcigar += '%s%s' % (opsize, optype)
 			else:
 				print 'ERROR: Faulty basic CIGAR string operation!'
