@@ -9,9 +9,9 @@ import re;
 import sys;
 from collections import defaultdict
 
-CIGAR_OPERATIONS_ALL = ['M', 'I', 'D', 'N', 'S', 'H', 'P', '=', 'X'];
-CIGAR_OPERATIONS_BASIC = ['M', 'I', 'D', 'S', 'H'];
-CIGAR_OPERATIONS_EXTENDED = ['M', 'I', 'D', 'S', 'H', '=', 'X'];
+CIGAR_OPERATIONS_ALL = ['M', 'I', 'D', 'N', 'S', 'H', 'P', '=', 'X']
+CIGAR_OPERATIONS_BASIC = ['M', 'I', 'D', 'S', 'H']
+CIGAR_OPERATIONS_EXTENDED = ['M', 'I', 'D', 'S', 'H', '=', 'X']
 
 # Global table containing mutation counts
 mutCntTable = {letter: defaultdict(int) for letter in ('A', 'T', 'G', 'C')}
@@ -884,6 +884,47 @@ class SAMLine:
 		return [err_window_rate, num_over_threshold, num_windows];
 
 
+
+# A function for analyzing RNA alignments
+# Different aligners represent "split alignments" in a different way
+# Some put Ns between alignments, in the CIGAR string
+# While others note it as multiple alignments with large clipping
+# This function should consider position, clipping and CIGAR string and determine whether two
+# separate alignments (SAM lines) represent the same real split alignment
+# NOTE: Two or more separate alignments are possibly a split alignment if they do not align the same parts of the read!
+def possible_split_alignment(samline1, samline2):
+	alignment_intersect = False
+
+	# Using regular expressions to find repeating digit and skipping one character after that
+	# Used to separate CIGAR string into individual operations
+	pattern = '(\d+)(.)'
+	cigar1 = samline1.cigar
+	pos1 = samline1.pos
+	operations1 = re.findall(pattern, cigar1)
+	cigar2 = samline2.cigar
+	pos2 = samline2.pos
+	operations2 = re.findall(pattern, cigar2)
+
+	for op1 in operations1:
+		if op1[1] in ('M', '=', 'X'):      # NOTE: I'm only interested in matches in alignment matches!
+			end1 = pos1 + int(op1[0])
+
+			pos2 = samline2.pos
+			for op2 in operations2:
+				if op2[1] in ('M', '=', 'X'):
+					end2 = pos2 + int(op2[0])
+
+					if not (end2 < pos1 or pos2 > end1):
+						alignment_intersect = True		# NOTE: Here, a return could be called right away!
+						return False
+
+				pos2 += int(op2[0])
+
+		pos1 += int(op1[0])
+
+	return not alignment_intersect
+
+
 # A helper function.
 # Takes two string of the same length and return corresponding
 # extended CIGAR string looking only at matches and mismatches
@@ -908,7 +949,9 @@ def getExtendedCIGAR(string1, string2, countMutations = True):
 	else:
 		optype = mismatch
 		if countMutations:
-			mutCntTable[string1[0]][string2[0]] += 1
+			ch1 = string1[0].upper()
+			ch2 = string2[0].upper()
+			mutCntTable[ch1][ch2] += 1
 	opsize = 1
 
 	# checking other characeters
@@ -920,7 +963,9 @@ def getExtendedCIGAR(string1, string2, countMutations = True):
 		else:
 			newoptype = mismatch
 			if countMutations:
-				mutCntTable[string1[i]][string2[i]] += 1
+				ch1 = string1[i].upper()
+				ch2 = string2[i].upper()
+				mutCntTable[ch1][ch2] += 1
 
 		if newoptype == optype:
 			opsize += 1
