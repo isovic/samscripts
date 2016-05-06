@@ -1780,7 +1780,7 @@ if __name__ == "__main__":
 			sys.stderr.write('\t%s %s mapped <input_sam_file> [<out_filtered_sam_file>]\n' % (sys.argv[0], sys.argv[1]));
 			exit(0);
 
-		mapped = sys.argv[2];
+		mapped = int(sys.argv[2]);
 		sam_file = sys.argv[3];
 		out_filtered_sam_file = None;
 		if (len(sys.argv) == 5):

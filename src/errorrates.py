@@ -351,12 +351,12 @@ def CollectAccuracy(sam_path, accuracy_path, suppress_error_messages=False):
 	
 	column_labels = ['mean', 'std', 'median', 'min', 'max'];
 	
-	error_rate_stats = [np.mean(all_error_rates), np.std(all_error_rates), np.median(all_error_rates), np.min(all_error_rates), np.max(all_error_rates)];
-	insertion_rate_stats = [np.mean(all_insertion_rates), np.std(all_insertion_rates), np.median(all_insertion_rates), np.min(all_insertion_rates), np.max(all_insertion_rates)];
-	deletion_rate_stats = [np.mean(all_deletion_rates), np.std(all_deletion_rates), np.median(all_deletion_rates), np.min(all_deletion_rates), np.max(all_deletion_rates)];
-	mismatch_rate_stats = [np.mean(all_mismatch_rates), np.std(all_mismatch_rates), np.median(all_mismatch_rates), np.min(all_mismatch_rates), np.max(all_mismatch_rates)];
-	match_rate_stats = [np.mean(all_match_rates), np.std(all_match_rates), np.median(all_match_rates), np.min(all_match_rates), np.max(all_match_rates)];
-	read_length_stats = [np.mean(all_read_lengths), np.std(all_read_lengths), np.median(all_read_lengths), np.min(all_read_lengths), np.max(all_read_lengths)];
+	error_rate_stats = [np.mean(all_error_rates), np.std(all_error_rates), np.median(all_error_rates), np.min(all_error_rates), np.max(all_error_rates)] if (len(all_error_rates) > 0) else [0.0, 0.0, 0.0, 0.0, 0.0];
+	insertion_rate_stats = [np.mean(all_insertion_rates), np.std(all_insertion_rates), np.median(all_insertion_rates), np.min(all_insertion_rates), np.max(all_insertion_rates)] if (len(all_insertion_rates) > 0) else [0.0, 0.0, 0.0, 0.0, 0.0];
+	deletion_rate_stats = [np.mean(all_deletion_rates), np.std(all_deletion_rates), np.median(all_deletion_rates), np.min(all_deletion_rates), np.max(all_deletion_rates)] if (len(all_deletion_rates) > 0) else [0.0, 0.0, 0.0, 0.0, 0.0];
+	mismatch_rate_stats = [np.mean(all_mismatch_rates), np.std(all_mismatch_rates), np.median(all_mismatch_rates), np.min(all_mismatch_rates), np.max(all_mismatch_rates)] if (len(all_mismatch_rates) > 0) else [0.0, 0.0, 0.0, 0.0, 0.0];
+	match_rate_stats = [np.mean(all_match_rates), np.std(all_match_rates), np.median(all_match_rates), np.min(all_match_rates), np.max(all_match_rates)] if (len(all_match_rates) > 0) else [0.0, 0.0, 0.0, 0.0, 0.0];
+	read_length_stats = [np.mean(all_read_lengths), np.std(all_read_lengths), np.median(all_read_lengths), np.min(all_read_lengths), np.max(all_read_lengths)] if (len(all_read_lengths) > 0) else [0.0, 0.0, 0.0, 0.0, 0.0];
 
 	ret_lines = '';
 	lines_error_rates = '';
@@ -368,8 +368,8 @@ def CollectAccuracy(sam_path, accuracy_path, suppress_error_messages=False):
 	lines_error_rates += 'Match rate:     \t%s\n' % ('\t'.join(['%2.2f%%' % (100.0 * match_rate_stats[i]) for i in range(len(error_rate_stats))]));
 	lines_error_rates += 'Read length:    \t%s\n' % ('\t'.join(['%.2f' % (read_length_stats[i]) for i in range(len(error_rate_stats))]));
 
-	insertion_ratio = int((insertion_rate_stats[0]/error_rate_stats[0]) * 100);
-	deletion_ratio = int((deletion_rate_stats[0]/error_rate_stats[0]) * 100);
+	insertion_ratio = int((insertion_rate_stats[0]/error_rate_stats[0]) * 100) if (error_rate_stats[0] != 0) else 0.0;
+	deletion_ratio = int((deletion_rate_stats[0]/error_rate_stats[0]) * 100) if (error_rate_stats[0] != 0) else 0.0;
 	mismatch_ratio = 100 - insertion_ratio - deletion_ratio;
 
 	lines_error_rates += 'Difference ratio:\t%d:%d:%d (mismatch:insertion:deletion)\n' % (mismatch_ratio, insertion_ratio, deletion_ratio);
@@ -393,19 +393,19 @@ def CollectAccuracy(sam_path, accuracy_path, suppress_error_messages=False):
 
 	### Normalizing the histograms.
 	sum_error_rate_counts = sum(error_rate_hist);
-	error_rate_hist = [(100*float(value)/float(sum_error_rate_counts)) for value in error_rate_hist];
+	error_rate_hist = [(100*float(value)/float(sum_error_rate_counts)) for value in error_rate_hist] if (sum_error_rate_counts != 0) else [0.0 for value in error_rate_hist];
 
 	sum_insertion_rate_counts = sum(insertion_hist);
-	insertion_hist = [(100*float(value)/float(sum_insertion_rate_counts)) for value in insertion_hist];
+	insertion_hist = [(100*float(value)/float(sum_insertion_rate_counts)) for value in insertion_hist] if (sum_insertion_rate_counts != 0) else [0.0 for value in insertion_hist];
 
 	sum_deletion_rate_counts = sum(deletion_hist);
-	deletion_hist = [(100*float(value)/float(sum_deletion_rate_counts)) for value in deletion_hist];
+	deletion_hist = [(100*float(value)/float(sum_deletion_rate_counts)) for value in deletion_hist] if (sum_deletion_rate_counts != 0) else [0.0 for value in deletion_hist];
 
 	sum_snp_rate_counts = sum(snp_hist);
-	snp_hist = [(100*float(value)/float(sum_snp_rate_counts)) for value in snp_hist];
+	snp_hist = [(100*float(value)/float(sum_snp_rate_counts)) for value in snp_hist] if (sum_snp_rate_counts != 0) else [0.0 for value in snp_hist];
 
 	sum_match_rate_counts = sum(match_hist);
-	match_hist = [(100*float(value)/float(sum_match_rate_counts)) for value in match_hist];
+	match_hist = [(100*float(value)/float(sum_match_rate_counts)) for value in match_hist] if (sum_match_rate_counts != 0) else [0.0 for value in match_hist];
 
 	PlotErrorRates(error_rate_hist, insertion_hist, deletion_hist, snp_hist, match_hist, sam_basename, out_png_path);
 
@@ -486,7 +486,7 @@ def ProcessSAM(references, sam_path, accuracy_counts_path, count_indels_as_event
 		
 		if (single_counts != None):
 			accuracy_counts.append(single_counts);
-			fp_accuracy_counts.write('\t'.join([('%.2f' % float(value)) for value in single_counts]) + '\t' + sam_line.qname + '\n');
+			fp_accuracy_counts.write('\t'.join([('%.5f' % float(value)) for value in single_counts]) + '\t' + sam_line.qname + '\n');
 
 	sys.stderr.write('\n');
 	sys.stderr.flush();

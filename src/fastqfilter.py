@@ -1286,7 +1286,7 @@ if __name__ == "__main__":
         input_fastq_path = sys.argv[2];
         if (len(sys.argv) == 4):
             reference_path = sys.argv[3];
-            [ref_ret_string, ref_num_seqs, ref_total_seq_len, ref_average_seq_len] = fastqparser.count_seq_length(reference_path);
+            [ref_ret_string, ref_num_seqs, ref_total_seq_len, ref_average_seq_len, max_seq_len] = fastqparser.count_seq_length(reference_path);
 #            sys.stdout.write('Reference info:\n');
             sys.stdout.write('(reference) Info for "%s".\n' % (reference_path));
             sys.stdout.write(ref_ret_string);
@@ -1466,7 +1466,7 @@ if __name__ == "__main__":
 
     elif (sys.argv[1] == 'subseqs'):
         if (len(sys.argv) < 5 or len(sys.argv) > 6):
-            sys.stderr.write('Extracts bases from all sequences in a FASTA file between specified coordinates.\n');
+            sys.stderr.write('Extracts bases from all sequences in a FASTA file between specified coordinates. End coordinate is not inclusive.\n');
             sys.stderr.write('Usage:\n');
             sys.stderr.write('\t%s %s <input_fastq_file> start end [<out_filtered_fastq_file>]\n' % (os.path.basename(sys.argv[0]), sys.argv[1]));
             sys.stderr.write('\n');

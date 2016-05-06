@@ -522,55 +522,94 @@ class SAMLine:
 	# for sam_line in sam_lines:
 	#	[cigar_count, cigar_op, pos_on_ref, pos_on_read] = sam_line.CalcCigarStartingPositions();
 	
-	def CalcCigarStartingPositions(self, separate_matches_in_individual_bases=False, switch_ins_and_dels=False):
+	def CalcCigarStartingPositions(self, separate_matches_in_individual_bases=False, separate_indels_in_individual_bases=False, switch_ins_and_dels=False, split_cigar_in_basic_format=True):
 		#cigar_list = self.SplitCigar();
-		cigar_list = self.SplitCigarInBasicFormat();
+		if (split_cigar_in_basic_format == True):
+			cigar_list = self.SplitCigarInBasicFormat();
+		else:
+			cigar_list = self.SplitCigar();
 		cigar_pos_list = [];
 		# 08.03.2015. Added the -1 to transform the reference coordinates from 1-based to 0-based.
 		pos_on_reference = self.clipped_pos + 0 - 1;
 		pos_on_read = 0;
 		
-		i = 0;
-		while (i < len(cigar_list)):
+		# i = 0;
+		# while (i < len(cigar_list)):
+		for i in xrange(0, len(cigar_list)):
 			cigar_count = cigar_list[i][0];
 			cigar_op = cigar_list[i][1];
-			
-			if (separate_matches_in_individual_bases == False):
-				# Edit 10.04.2015. I saw that the pos_on_read value was missing here, so I added it too:
+
+			if ((cigar_op in 'SH') == True):
 				cigar_pos_list.append([cigar_count + 0, cigar_op + '', pos_on_reference + 0, pos_on_read + 0]);
-				#if (cigar_op in 'MDSH=X'):
-					#pos_on_reference += cigar_count;
-				
-				# S and H are also used to walk down the reference, because pos_on_reference was initialized
-				# with self.clipped_pos, which is calculated from the SAM pos field by subtracting the number
-				# of clipped bases. Otherwise, S and H should not be used to increase pos_on_reference.
-				if (cigar_op in 'MSH=X'):
-					pos_on_reference += cigar_count;
-					pos_on_read += cigar_count;
-				elif ((switch_ins_and_dels == False and cigar_op == 'D') or  (switch_ins_and_dels == True and cigar_op == 'I')):
-					pos_on_reference += cigar_count;
-				elif ((switch_ins_and_dels == False and cigar_op == 'I') or  (switch_ins_and_dels == True and cigar_op == 'D')):
-					pos_on_read += cigar_count;
-					
-			else:
-				if ((cigar_op in 'M=X') == False):
+				pos_on_reference += cigar_count;
+				pos_on_read += cigar_count;
+			elif ((cigar_op in 'M=X') == True):
+				if (separate_matches_in_individual_bases == False):
 					cigar_pos_list.append([cigar_count + 0, cigar_op + '', pos_on_reference + 0, pos_on_read + 0]);
-					if (cigar_op in 'SH'):
-						pos_on_reference += cigar_count;
-						pos_on_read += cigar_count;
-					elif ((switch_ins_and_dels == False and cigar_op == 'D') or  (switch_ins_and_dels == True and cigar_op == 'I')):
-						pos_on_reference += cigar_count;
-					elif ((switch_ins_and_dels == False and cigar_op == 'I') or  (switch_ins_and_dels == True and cigar_op == 'D')):
-						pos_on_read += cigar_count;
+					pos_on_reference += cigar_count;
+					pos_on_read += cigar_count;
 				else:
-					j = 0;
-					while (j < cigar_count):
+					for j in xrange(0, cigar_count):
 						cigar_pos_list.append([1, cigar_op, pos_on_reference + 0, pos_on_read + 0]);
 						pos_on_reference += 1;
 						pos_on_read += 1;
-						j += 1;
+
+			elif ((cigar_op in 'D') == True):
+				if (separate_indels_in_individual_bases == False):
+					cigar_pos_list.append([cigar_count + 0, cigar_op + '', pos_on_reference + 0, pos_on_read + 0]);
+					pos_on_reference += cigar_count;
+				else:
+					for j in xrange(0, cigar_count):
+						cigar_pos_list.append([1, cigar_op, pos_on_reference + 0, pos_on_read + 0]);
+						pos_on_reference += 1;
+
+			elif ((cigar_op in 'I') == True):
+				if (separate_indels_in_individual_bases == False):
+					cigar_pos_list.append([cigar_count + 0, cigar_op + '', pos_on_reference + 0, pos_on_read + 0]);
+					pos_on_read += cigar_count;
+				else:
+					for j in xrange(0, cigar_count):
+						cigar_pos_list.append([1, cigar_op, pos_on_reference + 0, pos_on_read + 0]);
+						pos_on_read += 1;
+
+
 			
-			i += 1;
+			# if (separate_matches_in_individual_bases == False):
+			# 	# Edit 10.04.2015. I saw that the pos_on_read value was missing here, so I added it too:
+			# 	cigar_pos_list.append([cigar_count + 0, cigar_op + '', pos_on_reference + 0, pos_on_read + 0]);
+			# 	#if (cigar_op in 'MDSH=X'):
+			# 		#pos_on_reference += cigar_count;
+				
+			# 	# S and H are also used to walk down the reference, because pos_on_reference was initialized
+			# 	# with self.clipped_pos, which is calculated from the SAM pos field by subtracting the number
+			# 	# of clipped bases. Otherwise, S and H should not be used to increase pos_on_reference.
+			# 	if (cigar_op in 'MSH=X'):
+			# 		pos_on_reference += cigar_count;
+			# 		pos_on_read += cigar_count;
+			# 	elif ((switch_ins_and_dels == False and cigar_op == 'D') or  (switch_ins_and_dels == True and cigar_op == 'I')):
+			# 		pos_on_reference += cigar_count;
+			# 	elif ((switch_ins_and_dels == False and cigar_op == 'I') or  (switch_ins_and_dels == True and cigar_op == 'D')):
+			# 		pos_on_read += cigar_count;
+					
+			# else:
+			# 	if ((cigar_op in 'M=X') == False):
+			# 		cigar_pos_list.append([cigar_count + 0, cigar_op + '', pos_on_reference + 0, pos_on_read + 0]);
+			# 		if (cigar_op in 'SH'):
+			# 			pos_on_reference += cigar_count;
+			# 			pos_on_read += cigar_count;
+			# 		elif ((switch_ins_and_dels == False and cigar_op == 'D') or  (switch_ins_and_dels == True and cigar_op == 'I')):
+			# 			pos_on_reference += cigar_count;
+			# 		elif ((switch_ins_and_dels == False and cigar_op == 'I') or  (switch_ins_and_dels == True and cigar_op == 'D')):
+			# 			pos_on_read += cigar_count;
+			# 	else:
+			# 		j = 0;
+			# 		while (j < cigar_count):
+			# 			cigar_pos_list.append([1, cigar_op, pos_on_reference + 0, pos_on_read + 0]);
+			# 			pos_on_reference += 1;
+			# 			pos_on_read += 1;
+			# 			j += 1;
+			
+			# i += 1;
 		
 		return cigar_pos_list;
 
