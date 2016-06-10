@@ -850,6 +850,26 @@ def convert_reads_to_pacbio_format(reads_file, pacbio_reads_file):
     return header_conversion_hash;
 
 
+def add_dummy_qv(input_fastq_path, dummy_qv_val, out_fastq_path, fp_out):
+    try:
+        fp_in = open(input_fastq_path, 'r');
+    except:
+        sys.stderr.write('ERROR: Could not open file "%s" for reading! Exiting.\n' % input_fastq_path);
+        exit(0);
+
+    num_reads = 0;
+    while True:
+        [header, read] = fastqparser.get_single_read(fp_in);
+
+        if (len(read) == 0):
+            break;
+        quals = chr(dummy_qv_val + 33) * len(read[1]);
+        fp_out.write('@%s\n%s\n+\n%s\n' % (read[0][1:], read[1], quals));
+        num_reads += 1;
+
+    sys.stderr.write('\n');
+    fp_in.close();
+
 if __name__ == "__main__":
     if (len(sys.argv) < 2):
         sys.stderr.write('Various filtering methods for FASTA/FASTQ files.\n');
@@ -884,6 +904,7 @@ if __name__ == "__main__":
         sys.stderr.write('\tmsa2fasta\n');
         sys.stderr.write('\tseparate\n');
         sys.stderr.write('\t2pacbio\n');
+        sys.stderr.write('\tadddummyqv\n');
 
         exit(0);
 
@@ -1616,6 +1637,37 @@ if __name__ == "__main__":
         #     fp_out.close();
 
         exit(0);
+
+    elif (sys.argv[1] == 'adddummyqv'):
+        if (len(sys.argv) < 4 or len(sys.argv) > 5):
+            sys.stderr.write('Takes an input FASTA/FASTQ file and converts it to a FASTQ format if necessary, while replacing all QVs with a given qv_val value.\n');
+            sys.stderr.write('Usage:\n');
+            sys.stderr.write('\t%s %s qv_val <input_fastq_file> [<out_filtered_fastq_file>]\n' % (os.path.basename(sys.argv[0]), sys.argv[1]));
+            sys.stderr.write('\n');
+            exit(0);
+
+        dummy_qv_val = int(sys.argv[2]);
+        input_fastq_path = sys.argv[3];
+
+        out_fastq_path = '';
+        fp_out = sys.stdout;
+        if (len(sys.argv) == 5):
+            out_fastq_path = sys.argv[4];
+            if (input_fastq_path == out_fastq_path):
+                sys.stderr.write('ERROR: Output and input files are the same! Exiting.\n');
+                exit(0);
+            try:
+                fp_out = open(out_fastq_path, 'w');
+            except Exception, e:
+                sys.stderr.write(str(e));
+                exit(0);
+
+        add_dummy_qv(input_fastq_path, dummy_qv_val, out_fastq_path, fp_out);
+
+        if (fp_out != sys.stdout):
+            fp_out.close();
+        exit(0);
+
 
     else:
         sys.stderr.write('ERROR: Unknown subcommand!\n');
