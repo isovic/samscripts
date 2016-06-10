@@ -702,7 +702,7 @@ def getPaired(input_fastq_path, target_fastq_path):
             sys.stderr.write('\nProcessed %d reads' % i)
 
 
-def fastq2fasta(input_fastq_path):
+def fastq2fasta(input_fastq_path, replace_semicolon=True):
 
     if not (input_fastq_path.endswith('.fq') or input_fastq_path.endswith('.fastq')):
         sys.stderr.write('\nUnrecognized file extension! Assuming fastq or fasta format!')
@@ -710,9 +710,11 @@ def fastq2fasta(input_fastq_path):
     [headers, seqs, quals] = fastqparser.read_fastq(input_fastq_path)
 
     for i in xrange(len(headers)):
-        newheader = headers[i].replace(':', ' ')
-        sys.stdout.write('>%s\n%s\n' % (newheader, seqs[i]))
-
+        if (replace_semicolon == True):
+            newheader = headers[i].replace(':', ' ')
+            sys.stdout.write('>%s\n%s\n' % (newheader, seqs[i]))
+        else:
+            sys.stdout.write('>%s\n%s\n' % (headers[i], seqs[i]))
 
 def length_distribution(input_path):
     if (input_path.endswith('.fq') or input_path.endswith('.fastq')):
@@ -894,6 +896,7 @@ if __name__ == "__main__":
         sys.stderr.write('\tcount1d2d\n');
         sys.stderr.write('\tsubsample\n');
         sys.stderr.write('\tfastq2fasta\n');
+        sys.stderr.write('\tfastq2fasta2\n');
         sys.stderr.write('\tgetPairedHeaders\n');
         sys.stderr.write('\tchecknanoporepaths\n');
         sys.stderr.write('\tlength_distribution\n')
@@ -1428,7 +1431,7 @@ if __name__ == "__main__":
 
     elif (sys.argv[1] == 'fastq2fasta'):
         if (len(sys.argv) < 3 or len(sys.argv) > 3):
-            sys.stderr.write('Outputs a given fastq file in fasta format\n')
+            sys.stderr.write('Outputs a given fastq file in fasta format. Replaces the ":" characters with blank spaces.\n')
             sys.stderr.write('Additionally, replaces colons in header with spaces (relevant for running L&S pipeline).\n')
             sys.stderr.write('Usage:\n')
             sys.stderr.write('\t%s %s <input_fastq_file>\n' % (os.path.basename(sys.argv[0]), sys.argv[1]))
@@ -1437,7 +1440,22 @@ if __name__ == "__main__":
 
         input_fastq_path = sys.argv[2]
 
-        fastq2fasta(input_fastq_path)
+        fastq2fasta(input_fastq_path, True)
+
+        exit(0);
+
+    elif (sys.argv[1] == 'fastq2fasta2'):
+        if (len(sys.argv) < 3 or len(sys.argv) > 3):
+            sys.stderr.write('Outputs a given fastq file in fasta format. Does not replace the ":" characters with blank spaces (unlike fastq2fasta).\n')
+            sys.stderr.write('Additionally, replaces colons in header with spaces (relevant for running L&S pipeline).\n')
+            sys.stderr.write('Usage:\n')
+            sys.stderr.write('\t%s %s <input_fastq_file>\n' % (os.path.basename(sys.argv[0]), sys.argv[1]))
+            sys.stderr.write('\n')
+            exit(0);
+
+        input_fastq_path = sys.argv[2]
+
+        fastq2fasta(input_fastq_path, False)
 
         exit(0);
 
