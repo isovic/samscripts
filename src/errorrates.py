@@ -486,7 +486,11 @@ def ProcessSAM(references, sam_path, accuracy_counts_path, count_indels_as_event
 		
 		if (single_counts != None):
 			accuracy_counts.append(single_counts);
+			# The order of output columns is:
+			#   [match_rate, mismatch_rate, insertion_rate, deletion_rate, error_rate, matches, mismatches, insertions, deletions, errors, read_length, clipped_read_length]
 			fp_accuracy_counts.write('\t'.join([('%.5f' % float(value)) for value in single_counts]) + '\t' + sam_line.qname + '\n');
+			if (float(single_counts[4]) > 0.60):
+				print 'Error rate: %.5f, qname: "%s"' % (single_counts[4], sam_line.qname);
 
 	sys.stderr.write('\n');
 	sys.stderr.flush();

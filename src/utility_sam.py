@@ -641,14 +641,18 @@ class SAMLine:
 			if (cigar_op in 'MIS=X'):
 				alignment_length_on_seq += cigar_count;
 
-			if ((cigar_op == 'D' or cigar_op == 'I') and cigar_count > 100):
-				return False;
-			if ((i + 1) < len(split_cigar) and (cigar_op in 'DI') and (split_cigar[i + 1][1] in 'DISH')):
-				return False;
+			# if ((cigar_op == 'D' or cigar_op == 'I') and cigar_count > 100):
+			# 	sys.stderr.write('(I) Insane because: (cigar_op == \'D\' or cigar_op == \'I\') and cigar_count > 100!\n');
+			# 	return False;
+			# if ((i + 1) < len(split_cigar) and (cigar_op in 'DI') and (split_cigar[i + 1][1] in 'DISH')):
+			# 	sys.stderr.write('(II) Insane because: ((i + 1) < len(split_cigar) and (cigar_op in \'DI\') and (split_cigar[i + 1][1] in \'DISH\'))\n');
+			# 	sys.stderr.write('\ti = %d, len(split_cigar) = %d, cigar_op = %s, split_cigar[i+1]1] = %s\n' % (i, len(split_cigar), cigar_op, split_cigar[i+1][1]));
+			# 	return False;
 
 			i += 1;
 
 		if (seq_len != alignment_length_on_seq):
+			sys.stderr.write('(III) Insane because: (seq_len != alignment_length_on_seq)\n');
 			return False;
 
 		return True;

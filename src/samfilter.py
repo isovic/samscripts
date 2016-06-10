@@ -50,7 +50,7 @@ def filter_wrong_cigars(sam_file, out_filtered_sam_file):
 
 
 		else:
-			sys.stderr.write('\tRejected: line: %d, qname: %s, len: %d\n' % (i, sam_line.qname, len(sam_line.seq)));
+			sys.stderr.write('\tRejected: line: %d, qname: %s len: %d, len_from_cigar: %d\n' % (i, sam_line.qname, len(sam_line.seq), sam_line.CalcReadLengthFromCigar()));
 			# print '\tRejected: line: %d, qname: %s, len: %d, CIGAR len: %d' % (i, sam_line.qname, len(sam_line.seq), cigar_len);
 			num_rejected += 1;
 		i += 1;
@@ -1486,6 +1486,105 @@ def fix_sam_hnames(sam_file, reference_path, out_filtered_sam_file):
 	except:
 		pass;
 
+def plot_alignments(ref_file, sam_file):
+	fp_in = None;
+	fp_out = sys.stdout;
+	
+	try:
+		fp_in = open(sam_file, 'r');
+	except IOError:
+		sys.stderr.write('[%s] ERROR: Could not open file "%s" for reading!' % (__name__, sam_file));
+		exit(1);
+
+	[headers, seqs, quals] = fastqparser.read_fastq(ref_file);
+	header_hash = {};
+	i = 0;
+	while (i < len(headers)):
+		header_hash[headers[i]] = i;
+		header_hash[headers[i].split()[0]] = i;
+		i += 1;
+
+	i = 0;
+	for line in fp_in:
+		line = line.strip();
+		if (len(line) == 0 or line[0] == '@'):
+			continue;
+
+		i += 1;
+		sys.stderr.write('Line %d\n' % (i));
+
+		sam_line = utility_sam.SAMLine(line.rstrip());
+
+		if (sam_line.IsMapped() == False):
+			continue;
+
+		qname = sam_line.qname;
+		rname = sam_line.rname;
+		pos = sam_line.pos - 1;
+
+		fp_out.write('Showing alignment for seq "%s" and ref "%s":\n' % (qname, rname));
+		fp_out.write('Aligned pos: %d (1-based) or %d (0-based)\n' % (sam_line.pos, pos));
+
+		qseq = sam_line.seq;
+		rseq = seqs[header_hash[rname]];
+
+		opline = '';
+		rline = '';
+		mline = '';
+		qline = '';
+
+		split_cigar = sam_line.SplitCigar();
+		for [cigar_count, cigar_op, pos_on_ref, pos_on_read] in sam_line.CalcCigarStartingPositions(split_cigar_in_basic_format=False):
+			opline += cigar_op * (cigar_count);
+			if (cigar_op == 'I' or cigar_op == 'S'):
+				qline += qseq[pos_on_read:(pos_on_read+cigar_count)];
+				rline += '-' * (cigar_count);
+				mline += ' ' * (cigar_count);
+			if (cigar_op == 'D'):
+				qline += '-' * (cigar_count);
+				rline += rseq[pos_on_ref:(pos_on_ref+cigar_count)];
+				mline += ' ' * (cigar_count);
+			if (cigar_op in 'M=X'):
+				new_r = rseq[pos_on_ref:(pos_on_ref+cigar_count)];
+				new_q = qseq[pos_on_read:(pos_on_read+cigar_count)];
+				rline += new_r;
+				qline += new_q;
+				for j in xrange(0, len(new_q)):
+					if (new_q[j] != new_r[j]):
+						mline += 'X';
+					else:
+						mline += '|';
+
+		wrap_len = 160;
+		line_ref_start_coords = pos - 1;
+		line_ref_end_coords = pos - 1;
+		line_query_start_coords = -1;
+		line_query_end_coords = -1;
+		for j in xrange(0, len(qline), wrap_len):
+			end_pos = min(len(qline), (j + wrap_len));
+			part_opline = opline[j:end_pos];
+			part_rline = rline[j:end_pos];
+			part_qline = qline[j:end_pos];
+			part_mline = mline[j:end_pos];
+			num_ref_bases = sum([1 if val != '-' else 0 for val in part_rline]);
+			num_query_bases = sum([1 if val != '-' else 0 for val in part_qline]);
+
+			line_ref_start_coords = line_ref_end_coords + 1;
+			line_ref_end_coords = line_ref_start_coords + num_ref_bases;
+			line_query_start_coords = line_query_end_coords + 1;
+			line_query_end_coords = line_query_start_coords + num_query_bases;
+			fp_out.write('%s\n' % (part_opline));
+			fp_out.write('%s\t%d - %d\n' % (part_rline, line_ref_start_coords, line_ref_end_coords));
+			fp_out.write('%s\n' % (part_mline));
+			fp_out.write('%s\t%d - %d\n' % (part_qline, line_query_start_coords, line_query_end_coords));
+			fp_out.write('\n');
+			print '';
+
+		print '';
+		print '';
+
+
+
 def sam_info(sam_file, reads_file=None):
 	fp_in = None;
 	fp_out = sys.stdout;
@@ -1622,6 +1721,8 @@ if __name__ == "__main__":
 		sys.stderr.write('\tfixhnames\n');
 		sys.stderr.write('\tlongcigars\n');
 		sys.stderr.write('\tinfo\n');
+		sys.stderr.write('\tplot\n');
+
 
 
 		exit(0);
@@ -2046,6 +2147,17 @@ if __name__ == "__main__":
 		sam_info(sam_file, reads_path);
 		exit(0);
 
+	elif (sys.argv[1] == 'plot'):
+		if (len(sys.argv) < 4 or len(sys.argv) > 4):
+			sys.stderr.write('Draw alignments from a SAM file in a text mode.\n');
+			sys.stderr.write('Usage:\n');
+			sys.stderr.write('\t%s %s <input_sam_file> <ref_path>\n' % (sys.argv[0], sys.argv[1]));
+			exit(0);
+
+		sam_file = sys.argv[2];
+		ref_file = sys.argv[3];
+		plot_alignments(ref_file, sam_file);
+		exit(0);
 
 
 	else:

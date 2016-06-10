@@ -799,6 +799,55 @@ def separate_seqs(input_fastq_file, out_folder):
             fp.write('@%s\n%s\n+\n%s\n' % (headers[i], seqs[i], quals[i]));
     fp.close();
 
+def convert_reads_to_pacbio_format(reads_file, pacbio_reads_file):
+    try:
+        fp_in = open(reads_file, 'r');
+    except:
+        sys.stderr.write('ERROR: Could not open file "%s" for reading! Exiting.\n' % reads_file);
+        exit(0);
+
+    try:
+        fp_out = open(pacbio_reads_file, 'w');
+    except:
+        sys.stderr.write('ERROR: Could not open file "%s" for writing! Exiting.\n' % pacbio_reads_file);
+        exit(0);
+
+    current_read = 0;
+
+    header_conversion_hash = {};
+
+    while True:
+        [header, read] = fastqparser.get_single_read(fp_in);
+        
+        if (len(read) == 0):
+            break;
+
+        current_read += 1;
+
+        if (len(read[1]) <= 10):    ### DALIGNER has a lower length limit of 10bp.
+            sys.stderr.write('Found a read shorter than 10bp. Removing from the output.\n');
+            continue;
+
+        ### Check if the read is already formatted like PacBio.
+        if (header.count('/') == 2 and 'RQ' in header):
+            fp_out.write('\n'.join(read) + '\n');
+            continue;
+
+        trimmed_header = header.replace('_', ' ').split()[0];
+        # pacbio_header = '%s/%d/0_%d RQ=0.850' % (trimmed_header, current_read, len(read[1]));
+        pacbio_header = 'S1/%d/0_%d RQ=0.850' % (current_read, len(read[1]));
+        header_conversion_hash[pacbio_header] = header;
+        read[0] = '%s%s' % (read[0][0], pacbio_header); ### Keep the first char of the header line.
+        read[1] = re.sub("(.{500})", "\\1\n", read[1], 0, re.DOTALL);   ### Wrap the sequence line, because DALIGNER has a 9998bp line len limit.
+        if (len(read) == 4):
+            read[3] = re.sub("(.{500})", "\\1\n", read[3], 0, re.DOTALL);   ### Wrap the qual line, because DALIGNER has a 9998bp line len limit.
+        fp_out.write('\n'.join(read) + '\n');
+
+    sys.stderr.write('\n');
+    fp_in.close();
+    fp_out.close();
+
+    return header_conversion_hash;
 
 
 if __name__ == "__main__":
@@ -834,6 +883,7 @@ if __name__ == "__main__":
         sys.stderr.write('\tsubseqs\n');
         sys.stderr.write('\tmsa2fasta\n');
         sys.stderr.write('\tseparate\n');
+        sys.stderr.write('\t2pacbio\n');
 
         exit(0);
 
@@ -1536,6 +1586,36 @@ if __name__ == "__main__":
         out_folder = sys.argv[3];
 
         separate_seqs(input_fastq_path, out_folder);
+
+    elif (sys.argv[1] == '2pacbio'):
+        if (len(sys.argv) < 4 or len(sys.argv) > 4):
+            sys.stderr.write('Makes all headers in a FASTQ file unique by adding a number at the end of the header. Also, splits headers up to the first whitespace.\n');
+            sys.stderr.write('Usage:\n');
+            sys.stderr.write('\t%s %s <input_fastq_file> <out_converted_fastq_file>\n' % (os.path.basename(sys.argv[0]), sys.argv[1]));
+            exit(0);
+
+        input_fastq_path = sys.argv[2];
+
+        out_fastq_path = '';
+        fp_out = sys.stdout;
+        if (len(sys.argv) == 4):
+            out_fastq_path = sys.argv[3];
+            if (input_fastq_path == out_fastq_path):
+                sys.stderr.write('ERROR: Output and input files are the same! Exiting.\n');
+                exit(0);
+            try:
+                fp_out = open(out_fastq_path, 'w');
+            except Exception, e:
+                sys.stderr.write(str(e));
+                exit(0);
+        fp_out.close();
+
+        convert_reads_to_pacbio_format(input_fastq_path, out_fastq_path)
+
+        # if (fp_out != sys.stdout):
+        #     fp_out.close();
+
+        exit(0);
 
     else:
         sys.stderr.write('ERROR: Unknown subcommand!\n');
