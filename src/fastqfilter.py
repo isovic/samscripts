@@ -826,7 +826,7 @@ def convert_reads_to_pacbio_format(reads_file, pacbio_reads_file):
 
         current_read += 1;
 
-        if (len(read[1]) <= 10):    ### DALIGNER has a lower length limit of 10bp.
+        if (len(read[1]) <= 50):    ### DALIGNER has a lower length limit of 'k'. Trim more just to be safe.
             sys.stderr.write('Found a read shorter than 10bp. Removing from the output.\n');
             continue;
 
