@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 
 # Script written by Ivan Sovic.
 # Copyright Ivan Sovic, 2014. All rights reserved.
