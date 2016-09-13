@@ -298,7 +298,9 @@ class SAMLine:
 		if (self.IsMapped() == False):
 			return cigar_operations;
 		while i < len(self.cigar):
-			if (self.cigar[i] in CIGAR_OPERATIONS_EXTENDED):
+			# if (self.cigar[i] in CIGAR_OPERATIONS_EXTENDED):
+			# KK: To not ignore Ns
+			if (self.cigar[i] in CIGAR_OPERATIONS_ALL):
 				cigar_operations.append([int(cigarcount_string), self.cigar[i]]);
 				cigarcount_string = '';
 			else:
