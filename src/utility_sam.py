@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 
 # Copyright Ivan Sovic, 2015. www.sovic.org
 #
