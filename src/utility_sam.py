@@ -948,6 +948,10 @@ def possible_split_alignment(samline1, samline2, threshold = 0):
 	if samline1.flag & 16 != samline2.flag & 16:
 		return False
 
+	# Also first, check if both samlines are on the same reference
+	if samline1.rname != samline2.rname:
+		return False
+
 	# Using regular expressions to find repeating digit and skipping one character after that
 	# Used to separate CIGAR string into individual operations
 	pattern = '(\d+)(.)'
