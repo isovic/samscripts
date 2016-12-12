@@ -956,15 +956,17 @@ def possible_split_alignment(samline1, samline2, threshold = 0):
 	# Used to separate CIGAR string into individual operations
 	pattern = '(\d+)(.)'
 	cigar1 = samline1.cigar
-	pos1 = samline1.pos
+	pos1 = 0
+	rpos1 = samline1.pos
 	operations1 = re.findall(pattern, cigar1)
 	cigar2 = samline2.cigar
-	pos2 = samline2.pos
+	pos2 = 0
+	rpos2 = samline2.pos
 	operations2 = re.findall(pattern, cigar2)
 
 	# Examining distance threshold
 	if threshold > 0:
-		if (pos1 > pos2 and pos1-pos2 > threshold) or (pos2 > pos1 and pos2-pos1 > threshold) :
+		if (rpos1 > rpos2 and rpos1-rpos2 > threshold) or (rpos2 > rpos1 and rpos2-rpos1 > threshold) :
 			return False
 
 	for op1 in operations1:
