@@ -971,7 +971,8 @@ def possible_split_alignment(samline1, samline2, threshold = 0):
 		if op1[1] in ('M', '=', 'X'):      # NOTE: I'm only interested in intersects in alignment matches!
 			end1 = pos1 + int(op1[0])
 
-			pos2 = samline2.pos
+			# pos2 = samline2.pos
+			pos2 = 0
 			for op2 in operations2:
 				if op2[1] in ('M', '=', 'X'):
 					end2 = pos2 + int(op2[0])
@@ -980,9 +981,11 @@ def possible_split_alignment(samline1, samline2, threshold = 0):
 						alignment_intersect = True		# NOTE: Here, a return could be called right away!
 						return False
 
-				pos2 += int(op2[0])
+				if op2[1] != 'N':				# Ignoring Ns
+					pos2 += int(op2[0])
 
-		pos1 += int(op1[0])
+		if op1[1] != 'N':			# Ignoring Ns
+			pos1 += int(op1[0])
 
 	return not alignment_intersect
 
