@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 
 # Copyright Ivan Sovic, 2015. www.sovic.org
 #
@@ -298,7 +298,9 @@ class SAMLine:
 		if (self.IsMapped() == False):
 			return cigar_operations;
 		while i < len(self.cigar):
-			if (self.cigar[i] in CIGAR_OPERATIONS_EXTENDED):
+			# if (self.cigar[i] in CIGAR_OPERATIONS_EXTENDED):
+			# KK: To not ignore Ns
+			if (self.cigar[i] in CIGAR_OPERATIONS_ALL):
 				cigar_operations.append([int(cigarcount_string), self.cigar[i]]);
 				cigarcount_string = '';
 			else:
@@ -946,26 +948,33 @@ def possible_split_alignment(samline1, samline2, threshold = 0):
 	if samline1.flag & 16 != samline2.flag & 16:
 		return False
 
+	# Also first, check if both samlines are on the same reference
+	if samline1.rname != samline2.rname:
+		return False
+
 	# Using regular expressions to find repeating digit and skipping one character after that
 	# Used to separate CIGAR string into individual operations
 	pattern = '(\d+)(.)'
 	cigar1 = samline1.cigar
-	pos1 = samline1.pos
+	pos1 = 0
+	rpos1 = samline1.pos
 	operations1 = re.findall(pattern, cigar1)
 	cigar2 = samline2.cigar
-	pos2 = samline2.pos
+	pos2 = 0
+	rpos2 = samline2.pos
 	operations2 = re.findall(pattern, cigar2)
 
 	# Examining distance threshold
 	if threshold > 0:
-		if (pos1 > pos2 and pos1-pos2 > threshold) or (pos2 > pos1 and pos2-pos1 > threshold) :
+		if (rpos1 > rpos2 and rpos1-rpos2 > threshold) or (rpos2 > rpos1 and rpos2-rpos1 > threshold) :
 			return False
 
 	for op1 in operations1:
 		if op1[1] in ('M', '=', 'X'):      # NOTE: I'm only interested in intersects in alignment matches!
 			end1 = pos1 + int(op1[0])
 
-			pos2 = samline2.pos
+			# pos2 = samline2.pos
+			pos2 = 0
 			for op2 in operations2:
 				if op2[1] in ('M', '=', 'X'):
 					end2 = pos2 + int(op2[0])
@@ -974,9 +983,11 @@ def possible_split_alignment(samline1, samline2, threshold = 0):
 						alignment_intersect = True		# NOTE: Here, a return could be called right away!
 						return False
 
-				pos2 += int(op2[0])
+				if op2[1] != 'N':				# Ignoring Ns
+					pos2 += int(op2[0])
 
-		pos1 += int(op1[0])
+		if op1[1] != 'N':			# Ignoring Ns
+			pos1 += int(op1[0])
 
 	return not alignment_intersect
 
