@@ -87,6 +87,10 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 	#print ' ';
 	
 	clipped_read_length = 0;
+
+	seq_a = '';
+	seq_b = '';
+	aline = '';
 	
 	i = 0;
 	while i < len(split_cigar):
@@ -99,11 +103,19 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 			continue;
 		
 		if (cigarop[1] == 'S'):
+			seq_a += '-'*cigarop[0];
+			aline += '-'*cigarop[0];
+			seq_b = read_sequence[position_read:(position_read + cigarop[0])];
+
 			position_read += cigarop[0];
 			i += 1;
 			continue;
 		
 		if (cigarop[1] == 'I'):
+			seq_a += '-'*cigarop[0];
+			aline += ' '*cigarop[0];
+			seq_b = read_sequence[position_read];
+
 			if (count_indels_as_events == True):
 				insertions += 1;
 			else:
@@ -114,6 +126,10 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 			continue;
 		
 		if (cigarop[1] == 'D'):
+			seq_a += reference_sequence[position_reference: (position_reference+cigarop[0])];
+			aline += ' ' * cigarop[0];
+			seq_b = '-' * cigarop[0];
+
 			if (count_indels_as_events == True):
 				deletions += 1;
 			else:
@@ -121,15 +137,19 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 			position_reference += cigarop[0];
 			i += 1;
 			continue;
-		
+
 		if (cigarop[1] in ['M', '=', 'X']):
 			j = 0;
 			while j < cigarop[0]:
 				#print 'ref[%d] %s %s %s read[%d]' % (position_reference, reference_sequence[position_reference], cigarop[1], read_sequence[position_read], position_read);
 				try:
+					seq_a += reference_sequence[position_reference];
+					seq_b = read_sequence[position_read];
 					if reference_sequence[position_reference] == read_sequence[position_read]:
+						aline += '|';
 						matches += 1;
 					else:
+						aline += 'X';
 						mismatches += 1;
 				except Exception, e:
 					sys.stderr.write(str(e) + '\n');
@@ -162,6 +182,11 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 	mismatch_rate = float(mismatches) / float(clipped_read_length);
 	insertion_rate = float(insertions) / float(clipped_read_length);
 	deletion_rate = float(deletions) / float(clipped_read_length);
+
+	if (error_rate > 0.50):
+		sys.stderr.write('%s\n' % seq_a);
+		sys.stderr.write('%s\n' % aline);
+		sys.stderr.write('%s\n' % seq_n);
 
 	# if (match_rate < 0.50):
 	# 	sys.stderr.write('\n' + sam_line.FormatAccuracy() + '\n');
@@ -489,7 +514,7 @@ def ProcessSAM(references, sam_path, accuracy_counts_path, count_indels_as_event
 			# The order of output columns is:
 			#   [match_rate, mismatch_rate, insertion_rate, deletion_rate, error_rate, matches, mismatches, insertions, deletions, errors, read_length, clipped_read_length]
 			fp_accuracy_counts.write('\t'.join([('%.5f' % float(value)) for value in single_counts]) + '\t' + sam_line.qname + '\n');
-			if (float(single_counts[4]) > 0.60):
+			if (float(single_counts[4]) > 0.50):
 				print 'Error rate: %.5f, qname: "%s"' % (single_counts[4], sam_line.qname);
 
 	sys.stderr.write('\n');
