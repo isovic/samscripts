@@ -91,6 +91,7 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 	seq_a = '';
 	seq_b = '';
 	aline = '';
+	acig = '';
 	
 	i = 0;
 	while i < len(split_cigar):
@@ -105,7 +106,8 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 		if (cigarop[1] == 'S'):
 			seq_a += '-'*cigarop[0];
 			aline += '-'*cigarop[0];
-			seq_b = read_sequence[position_read:(position_read + cigarop[0])];
+			acig += 'S' * cigarop[0];
+			seq_b += read_sequence[position_read:(position_read + cigarop[0])];
 
 			position_read += cigarop[0];
 			i += 1;
@@ -114,7 +116,8 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 		if (cigarop[1] == 'I'):
 			seq_a += '-'*cigarop[0];
 			aline += ' '*cigarop[0];
-			seq_b = read_sequence[position_read];
+			seq_b += read_sequence[position_read:(position_read+cigarop[0])];
+			acig += 'I' * cigarop[0];
 
 			if (count_indels_as_events == True):
 				insertions += 1;
@@ -128,7 +131,8 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 		if (cigarop[1] == 'D'):
 			seq_a += reference_sequence[position_reference: (position_reference+cigarop[0])];
 			aline += ' ' * cigarop[0];
-			seq_b = '-' * cigarop[0];
+			seq_b += '-' * cigarop[0];
+			acig += 'D' * cigarop[0];
 
 			if (count_indels_as_events == True):
 				deletions += 1;
@@ -144,8 +148,9 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 				#print 'ref[%d] %s %s %s read[%d]' % (position_reference, reference_sequence[position_reference], cigarop[1], read_sequence[position_read], position_read);
 				try:
 					seq_a += reference_sequence[position_reference];
-					seq_b = read_sequence[position_read];
-					if reference_sequence[position_reference] == read_sequence[position_read]:
+					seq_b += read_sequence[position_read];
+					acig += cigarop[1];
+					if reference_sequence[position_reference].upper() == read_sequence[position_read].upper():
 						aline += '|';
 						matches += 1;
 					else:
@@ -165,7 +170,9 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 		if (cigarop[1] == 'N'):
 			seq_a += reference_sequence[position_reference: (position_reference+cigarop[0])];
 			aline += '-' * cigarop[0];
-			seq_b = '-' * cigarop[0];
+			seq_b += '-' * cigarop[0];
+			acig += 'N' * cigarop[0];
+
 			position_reference += cigarop[0];
 			i += 1;
 			continue;
@@ -183,6 +190,9 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 	
 	#print (matches + mismatches + insertions);
 	#print (mismatches + insertions + deletions);
+
+	seq_b += '-' * (len(read_sequence) - position_read);
+	acig += ' ' * (len(read_sequence) - position_read);
 	
 	read_length = len(read_sequence);
 	errors = mismatches + insertions + deletions;
@@ -193,9 +203,14 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 	deletion_rate = float(deletions) / float(clipped_read_length);
 
 	if (error_rate > 0.50):
-		sys.stderr.write('%s\n' % seq_a);
-		sys.stderr.write('%s\n' % aline);
-		sys.stderr.write('%s\n' % seq_b);
+		print len(seq_a), len(aline), len(acig), len(seq_b);
+		for w in xrange(0, len(seq_a), 120):
+			w_end = min(w+120, len(seq_a));
+			sys.stderr.write('%s\n' % (seq_a[w:w_end]));
+			sys.stderr.write('%s\n' % (aline[w:w_end]));
+			sys.stderr.write('%s\n' % (acig[w:w_end]));
+			sys.stderr.write('%s\n' % (seq_b[w:w_end]));
+			sys.stderr.write('\n');
 
 	# if (match_rate < 0.50):
 	# 	sys.stderr.write('\n' + sam_line.FormatAccuracy() + '\n');
