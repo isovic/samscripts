@@ -186,7 +186,7 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 	if (error_rate > 0.50):
 		sys.stderr.write('%s\n' % seq_a);
 		sys.stderr.write('%s\n' % aline);
-		sys.stderr.write('%s\n' % seq_n);
+		sys.stderr.write('%s\n' % seq_b);
 
 	# if (match_rate < 0.50):
 	# 	sys.stderr.write('\n' + sam_line.FormatAccuracy() + '\n');
