@@ -161,6 +161,15 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 				clipped_read_length += 1;
 				
 				j += 1;
+
+		if (cigarop[1] == 'N'):
+			seq_a += reference_sequence[position_reference: (position_reference+cigarop[0])];
+			aline += '-' * cigarop[0];
+			seq_b = '-' * cigarop[0];
+			position_reference += cigarop[0];
+			i += 1;
+			continue;
+
 			
 			
 		
