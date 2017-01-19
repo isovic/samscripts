@@ -56,7 +56,7 @@ LONG_NAME = {'M': '(Mis)Match', 'I': 'Insertion', 'D': 'Deletion', '=': 'Match',
 def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 	if (sam_line.IsMapped() == False):
 		return None;
-	
+
 	qname = sam_line.qname;
 	rname = sam_line.rname;
 	cigar = sam_line.cigar;
@@ -79,7 +79,7 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 	except:
 		sys.stderr.write('ERROR: Reference name "%s" not found! Read name: "%s".\n' % (rname, qname));
 		return None;
-	
+
 	#split_cigar = SplitCigar(cigar);
 	split_cigar = sam_line.SplitCigar();
 	
@@ -97,7 +97,7 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 	while i < len(split_cigar):
 		cigarop = split_cigar[i];
 		
-		#print '[%d] ' % i, cigarop;
+		# print '[%d] ' % i, cigarop;
 		
 		if (cigarop[1] == 'H'):
 			i += 1;
@@ -188,8 +188,9 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 		
 		i += 1;
 	
-	#print (matches + mismatches + insertions);
-	#print (mismatches + insertions + deletions);
+	# print (matches + mismatches + insertions);
+	# print (mismatches + insertions + deletions);
+	# print 'Tu sam 3!';
 
 	seq_b += '-' * (len(read_sequence) - position_read);
 	acig += ' ' * (len(read_sequence) - position_read);
@@ -201,6 +202,14 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 	mismatch_rate = float(mismatches) / float(clipped_read_length);
 	insertion_rate = float(insertions) / float(clipped_read_length);
 	deletion_rate = float(deletions) / float(clipped_read_length);
+
+	# print 'matches = ', matches;
+	# print 'mismatches = ', mismatches;
+	# print 'insertions = ', insertions;
+	# print 'deletions = ', deletions;
+	# print 'errors = ', errors;
+	# print 'clipped_read_length = ', clipped_read_length;
+	# print 'match_rate = ', match_rate;
 
 	if (error_rate > 0.50):
 		print len(seq_a), len(aline), len(acig), len(seq_b);
@@ -230,7 +239,7 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 	# 	exit(1);
 	
 	#exit(1);
-	
+
 	return [match_rate, mismatch_rate, insertion_rate, deletion_rate, error_rate, matches, mismatches, insertions, deletions, errors, read_length, clipped_read_length];
 
 def FilterZeros(hist_values):
@@ -369,7 +378,7 @@ def CollectAccuracy(sam_path, accuracy_path, suppress_error_messages=False):
 		match_rate = float(split_line[0]);
 		read_length = float(split_line[10]);
 		
-		if (error_rate >= 1.0 or insertion_rate >= 1.0 or deletion_rate >= 1.0 or mismatch_rate >= 1.0 or match_rate >= 1.0):
+		if (error_rate > 1.0 or insertion_rate > 1.0 or deletion_rate > 1.0 or mismatch_rate > 1.0 or match_rate > 1.0):
 			continue;
 		
 		#print error_rate
