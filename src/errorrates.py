@@ -39,22 +39,6 @@ VERBOSE_DEBUG = False;
 
 
 
-#def SplitCigar(cigar):
-	#i = 0;
-	#cigarcount_string = '';
-	#cigar_operations = [];
-	
-	#while i < len(cigar):
-		#if (cigar[i] in CIGAR_OPERATIONS_EXTENDED):
-			#cigar_operations.append([int(cigarcount_string), cigar[i]]);
-			#cigarcount_string = '';
-		#else:
-			#cigarcount_string += cigar[i];
-		
-		#i += 1;
-	
-	#return cigar_operations;
-
 def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 	if (sam_line.IsMapped() == False):
 		return None;
@@ -178,21 +162,8 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 			position_reference += cigarop[0];
 			i += 1;
 			continue;
-
-			
-			
-		
-		#if (cigarop[1] in ['M', 'I', 'S', '=', 'X']):
-			#position += 1;
-		
-		#if (cigarop[1] in 'IS'):
-			#position +=
 		
 		i += 1;
-	
-	# print (matches + mismatches + insertions);
-	# print (mismatches + insertions + deletions);
-	# print 'Tu sam 3!';
 
 	seq_b += '-' * (len(read_sequence) - position_read);
 	acig += ' ' * (len(read_sequence) - position_read);
@@ -205,14 +176,6 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 	insertion_rate = float(insertions) / float(clipped_read_length);
 	deletion_rate = float(deletions) / float(clipped_read_length);
 
-	# print 'matches = ', matches;
-	# print 'mismatches = ', mismatches;
-	# print 'insertions = ', insertions;
-	# print 'deletions = ', deletions;
-	# print 'errors = ', errors;
-	# print 'clipped_read_length = ', clipped_read_length;
-	# print 'match_rate = ', match_rate;
-
 	if (VERBOSE_DEBUG == True):
 		if (error_rate > 0.50):
 			sys.stderr.write('len(seq_a) = %ld, len(aline) = %ld, len(acig) = %ld, len(seq_b) = %ld\n' % (len(seq_a), len(aline), len(acig), len(seq_b)));
@@ -223,27 +186,6 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 				sys.stderr.write('%s\n' % (acig[w:w_end]));
 				sys.stderr.write('%s\n' % (seq_b[w:w_end]));
 				sys.stderr.write('\n');
-
-
-
-	# if (match_rate < 0.50):
-	# 	sys.stderr.write('\n' + sam_line.FormatAccuracy() + '\n');
-	# 	sys.stderr.write('matches = %d, clipped_read_length = %d\n' % (matches, clipped_read_length));
-
-	# print 'mismatches = ', mismatches, ', insertions = ', insertions, ', deletions = ', deletions, ', matches = ', matches, ', errors = ', errors;
-	# print '[match_rate, mismatch_rate, insertion_rate, deletion_rate, error_rate, matches, mismatches, insertions, deletions, errors, read_length, clipped_read_length] = ', [match_rate, mismatch_rate, insertion_rate, deletion_rate, error_rate, matches, mismatches, insertions, deletions, errors, read_length, clipped_read_length];
-
-#    if (error_rate > 0.43):
-#            sys.stdout.write('%s\t%d\n' % (sam_line.qname, sam_line.clipped_pos));
-#            sys.stdout.flush();
-
-	# if (error_rate > 0.49 and error_rate < 0.51):
-	# 	print 'errors = ', errors;
-	# 	sam_line.Verbose();
-	# 	sys.stdout.flush();
-	# 	exit(1);
-	
-	#exit(1);
 
 	return [match_rate, mismatch_rate, insertion_rate, deletion_rate, error_rate, matches, mismatches, insertions, deletions, errors, read_length, clipped_read_length];
 
@@ -471,32 +413,6 @@ def CollectAccuracy(sam_path, accuracy_path, suppress_error_messages=False):
 	match_hist = [(100*float(value)/float(sum_match_rate_counts)) for value in match_hist] if (sum_match_rate_counts != 0) else [0.0 for value in match_hist];
 
 	PlotErrorRates(error_rate_hist, insertion_hist, deletion_hist, snp_hist, match_hist, sam_basename, out_png_path);
-
-	# fig = plt.figure();
-	# ax1 = plt.subplot(111);
-	# length_errs = zip(all_error_rates, all_read_lengths);
-	# # length_errs = zip(all_read_lengths, all_error_rates);
-	# # length_errs = sorted(length_errs, key=lambda x: x[0]);
-	# # plt.scatter([val[0] for val in length_errs if val[0] < 10000], [val[1] for val in length_errs if val[0] < 10000]);
-	# # plt.scatter([val[0] for val in length_errs], [val[1] for val in length_errs]);
-	# # print length_errs;
-	# maxx = max(all_error_rates);
-	# maxy = max(all_read_lengths);
-	# x = [val[0] for val in length_errs];
-	# # y = [float(val[1])/float(maxy) for val in length_errs];
-	# y = [float(val[1]) for val in length_errs];
-	# # x = [val[0] for val in length_errs if val[1] < 1000];
-	# # y = [val[1] for val in length_errs if val[1] < 1000];
-	# # x = all_error_rates;
-	# # y = all_read_lengths;
-
-	# heatmap, xedges, yedges = np.histogram2d(x, y, bins=50)
-	# extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
-	# # print heatmap
-
-	# plt.clf()
-	# plt.imshow(heatmap, extent=extent)
-	# plt.show()
 
 	return [ret_lines, lines_error_rates, error_rate_hist, insertion_hist, deletion_hist, snp_hist, match_hist, sam_basename, out_png_path];
 	
