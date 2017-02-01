@@ -35,6 +35,8 @@ CIGAR_OPERATIONS_EXTENDED = ['M', 'I', 'D', 'S', 'H', '=', 'X'];
 PARAMS_FOR_STATS = ['read_length', 'edit_distance'];
 LONG_NAME = {'M': '(Mis)Match', 'I': 'Insertion', 'D': 'Deletion', '=': 'Match', 'X': 'Mismatch', 'read_length': 'Read length', 'edit_distance': 'Edit distance'};
 
+VERBOSE_DEBUG = False;
+
 
 
 #def SplitCigar(cigar):
@@ -211,15 +213,18 @@ def CountCigarOperations(references, sam_line, count_indels_as_events=False):
 	# print 'clipped_read_length = ', clipped_read_length;
 	# print 'match_rate = ', match_rate;
 
-	if (error_rate > 0.50):
-		print len(seq_a), len(aline), len(acig), len(seq_b);
-		for w in xrange(0, len(seq_a), 120):
-			w_end = min(w+120, len(seq_a));
-			sys.stderr.write('%s\n' % (seq_a[w:w_end]));
-			sys.stderr.write('%s\n' % (aline[w:w_end]));
-			sys.stderr.write('%s\n' % (acig[w:w_end]));
-			sys.stderr.write('%s\n' % (seq_b[w:w_end]));
-			sys.stderr.write('\n');
+	if (VERBOSE_DEBUG == True):
+		if (error_rate > 0.50):
+			sys.stderr.write('len(seq_a) = %ld, len(aline) = %ld, len(acig) = %ld, len(seq_b) = %ld\n' % (len(seq_a), len(aline), len(acig), len(seq_b)));
+			for w in xrange(0, len(seq_a), 120):
+				w_end = min(w+120, len(seq_a));
+				sys.stderr.write('%s\n' % (seq_a[w:w_end]));
+				sys.stderr.write('%s\n' % (aline[w:w_end]));
+				sys.stderr.write('%s\n' % (acig[w:w_end]));
+				sys.stderr.write('%s\n' % (seq_b[w:w_end]));
+				sys.stderr.write('\n');
+
+
 
 	# if (match_rate < 0.50):
 	# 	sys.stderr.write('\n' + sam_line.FormatAccuracy() + '\n');
@@ -547,8 +552,9 @@ def ProcessSAM(references, sam_path, accuracy_counts_path, count_indels_as_event
 			# The order of output columns is:
 			#   [match_rate, mismatch_rate, insertion_rate, deletion_rate, error_rate, matches, mismatches, insertions, deletions, errors, read_length, clipped_read_length]
 			fp_accuracy_counts.write('\t'.join([('%.5f' % float(value)) for value in single_counts]) + '\t' + sam_line.qname + '\n');
-			if (float(single_counts[4]) > 0.50):
-				print 'Error rate: %.5f, qname: "%s"' % (single_counts[4], sam_line.qname);
+			if (VERBOSE_DEBUG == True):
+				if (float(single_counts[4]) > 0.50):
+					print 'Error rate: %.5f, qname: "%s"' % (single_counts[4], sam_line.qname);
 
 	sys.stderr.write('\n');
 	sys.stderr.flush();
