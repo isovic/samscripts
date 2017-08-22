@@ -786,14 +786,17 @@ def msa2fasta(input_path, fp_out):
             cons_seq += sorted_base_counts[-1][0]
     fp_out.write('>Consensus_from_MSA\n%s\n' % (cons_seq));
 
-def separate_seqs(input_fastq_file, out_folder):
+def separate_seqs(input_fastq_file, out_folder, headers_as_fn=False):
     if (not os.path.exists(out_folder)):
         os.makedirs(out_folder);
 
     [headers, seqs, quals] = fastqparser.read_fastq(input_fastq_file);
 
     for i in xrange(len(seqs)):
-        fp = open('%s/%d.fast%c' % (out_folder, (i+1), input_fastq_file[-1]), 'w');
+        if (headers_as_fn == False):
+            fp = open('%s/%d.fast%c' % (out_folder, (i+1), input_fastq_file[-1]), 'w');
+        else:
+            fp = open('%s/%s.fast%c' % (out_folder, headers[i].split()[0], input_fastq_file[-1]), 'w');
         # fp = open('%s/%d' % (out_folder, (i+1)), 'w');
         if (len(quals[i]) == 0):
             fp.write('>%s\n%s\n' % (headers[i], seqs[i]));
@@ -1614,17 +1617,22 @@ if __name__ == "__main__":
         exit(0);        
 
     elif (sys.argv[1] == 'separate'):
-        if (len(sys.argv) < 4 or len(sys.argv) > 4 ):
+        if (len(sys.argv) < 4 or len(sys.argv) > 5 ):
             sys.stderr.write('Separate a FASTA/FASTQ file into individual sequence files. File names will be numbers assigned to sequences sequentially.\n');
             sys.stderr.write('Usage:\n');
-            sys.stderr.write('\t%s %s <input_fastq_file> <out_folder>\n' % (os.path.basename(sys.argv[0]), sys.argv[1]));
+            sys.stderr.write('\t%s %s <input_fastq_file> <out_folder> [headers_as_fn]\n' % (os.path.basename(sys.argv[0]), sys.argv[1]));
+            sys.stderr.write('\n');
+            sys.stderr.write('  headers_as_fn - if "true", output files will be named the same as the header of the corresponding sequence.\n');
             sys.stderr.write('\n');
             exit(0);
 
         input_fastq_path = sys.argv[2];
         out_folder = sys.argv[3];
+        headers_as_fn = False;
+	if (len(sys.argv) >= 5):
+            headers_as_fn = True if (sys.argv[4].lower() in ['true', '1']) else False;
 
-        separate_seqs(input_fastq_path, out_folder);
+        separate_seqs(input_fastq_path, out_folder, headers_as_fn=headers_as_fn);
 
     elif (sys.argv[1] == '2pacbio'):
         if (len(sys.argv) < 4 or len(sys.argv) > 4):
