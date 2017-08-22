@@ -10,7 +10,7 @@ import re
 import os
 import sys
 import fastqparser
-import numpy as np
+# import numpy as np
 import random
 import operator;
 
@@ -226,23 +226,23 @@ def base_quality_stats(input_fastq_path):
         phreds = [];
         for char in quals:
             phreds.append(ord(char) - 33);
-        if (('twodir' in header.lower()) or ('-2d' in header.lower())):
-            means_2d.append(np.mean(phreds));
-        else:
-            means_1d.append(np.mean(phreds));
+#        if (('twodir' in header.lower()) or ('-2d' in header.lower())):
+#            means_2d.append(np.mean(phreds));
+#        else:
+#            means_1d.append(np.mean(phreds));
 
         num_reads += 1;
 
     sys.stderr.write('\n');
 
-    if (len(means_1d) > 0):
-        sys.stdout.write('[1d] avg = %5.2f\tstd = %5.2f\tmin = %2d\tmax = %2d\n' % (np.mean(means_1d), np.std(means_1d), min(means_1d), max(means_1d)));
-    else:
-        sys.stdout.write('[1d] avg = %5.2f\tstd = %5.2f\tmin = %2d\tmax = %2d\n' % (0.0, 0.0, 0.0, 0.0));
-    if (len(means_2d) > 0):
-        sys.stdout.write('[2d] avg = %5.2f\tstd = %5.2f\tmin = %2d\tmax = %2d\n' % (np.mean(means_2d), np.std(means_2d), min(means_2d), max(means_2d)));
-    else:
-        sys.stdout.write('[2d] avg = %5.2f\tstd = %5.2f\tmin = %2d\tmax = %2d\n' % (0.0, 0.0, 0.0, 0.0));
+#     if (len(means_1d) > 0):
+#        sys.stdout.write('[1d] avg = %5.2f\tstd = %5.2f\tmin = %2d\tmax = %2d\n' % (np.mean(means_1d), np.std(means_1d), min(means_1d), max(means_1d)));
+#      else:
+#        sys.stdout.write('[1d] avg = %5.2f\tstd = %5.2f\tmin = %2d\tmax = %2d\n' % (0.0, 0.0, 0.0, 0.0));
+#    if (len(means_2d) > 0):
+#        sys.stdout.write('[2d] avg = %5.2f\tstd = %5.2f\tmin = %2d\tmax = %2d\n' % (np.mean(means_2d), np.std(means_2d), min(means_2d), max(means_2d)));
+#    else:
+#        sys.stdout.write('[2d] avg = %5.2f\tstd = %5.2f\tmin = %2d\tmax = %2d\n' % (0.0, 0.0, 0.0, 0.0));
 
     fp_in.close();
 

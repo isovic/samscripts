@@ -7,7 +7,7 @@
 # Module for parsing FASTA/FASTQ files.
 
 import sys;
-import numpy as np;
+# import numpy as np;
 
 def peek(fp, num_chars):
 	data = fp.read(num_chars);
@@ -224,11 +224,11 @@ def count_seq_length(fastq_path):
 
 	if (len(all_read_lengths) > 0):
 		total_seq_len = sum(all_read_lengths);
-		average_seq_len = float(np.mean(all_read_lengths));
-		min_seq_len = np.min(all_read_lengths);
-		max_seq_len = np.max(all_read_lengths);
-		std_seq_len = float(np.std(all_read_lengths));
-		median_seq_len = float(np.median(all_read_lengths));
+		average_seq_len = float(sum(all_read_lengths)/len(all_read_lengths));
+		min_seq_len = min(all_read_lengths);
+		max_seq_len = max(all_read_lengths);
+		std_seq_len = 0.0; # float(np.std(all_read_lengths));
+		median_seq_len = 0.0; # float(np.median(all_read_lengths));
 	else:
 		total_seq_len = 0;
 		average_seq_len = 0.0;
@@ -278,6 +278,16 @@ def complement_base(base):
 		return 'A';
 	if (base == 'G'):
 		return 'C';
+
+	if (base == 'a'):
+		return 't';
+	if (base == 'c'):
+		return 'g';
+	if (base == 't'):
+		return 'a';
+	if (base == 'g'):
+		return 'c';
+
 	return 'N';
 
 def revcomp_seq(sequence):
