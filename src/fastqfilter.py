@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2.7
 
 # Copyright Ivan Sovic, 2015. www.sovic.org
 #
@@ -247,7 +247,7 @@ def base_quality_stats(input_fastq_path):
     fp_in.close();
 
 def base_quality_filter(input_fastq_path, lte_gte, qv_threshold, out_fastq_path, fp_out):
-    print 'lte_gte = "%s"' % (lte_gte);
+#    print 'lte_gte = "%s"' % (lte_gte);
 
     try:
         fp_in = open(input_fastq_path, 'r');
