@@ -795,6 +795,8 @@ def separate_seqs(input_fastq_file, out_folder, headers_as_fn=False):
     for i in xrange(len(seqs)):
         if (headers_as_fn == False):
             fp = open('%s/%d.fast%c' % (out_folder, (i+1), input_fastq_file[-1]), 'w');
+            # out_prefix = headers[i].split()[0].replace('/', '-')
+            # fp = open('%s/%02d.%s.fast%c' % (out_folder, (i+1), out_prefix, input_fastq_file[-1]), 'w');
         else:
             fname = headers[i].split()[0].replace('|', '_');
             fname = fname.replace('/', '-');
