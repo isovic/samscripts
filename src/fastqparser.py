@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 # Script written by Ivan Sovic.
 # Copyright Ivan Sovic, 2014. All rights reserved.
@@ -10,11 +10,12 @@ import sys;
 import numpy as np;
 
 def peek(fp, num_chars):
-	data = fp.read(num_chars);
-	if len(data) == 0:
-		return '';
-	fp.seek(num_chars * -1, 1);
-	return data;
+  prev_pos = fp.tell()
+  data = fp.read(num_chars)
+  if len(data) == 0:
+    return ''
+  fp.seek(prev_pos, 0)
+  return data
 
 # Returns a single read from the given FASTA/FASTQ file.
 # Parameter header contains only the header of the read.
@@ -167,13 +168,13 @@ def convert_to_fasta(fastq_path, out_fasta_path):
 	try:
 		fp_in = open(fastq_path, 'r');
 	except IOError:
-		print 'ERROR: Could not open file "%s" for reading!' % fastq_path;
+		sys.stderr.write('ERROR: Could not open file "%s" for reading!\n' % fastq_path)
 		return;
 	
 	try:
 		fp_out = open(out_fasta_path, 'w');
 	except IOError:
-		print 'ERROR: Could not open file "%s" for writing!' % out_fasta_path;
+		sys.stderr.write('ERROR: Could not open file "%s" for writing!\n' % out_fasta_path)
 		fp_in.close();
 		return;
 	
@@ -201,7 +202,7 @@ def count_seq_length(fastq_path):
 	try:
 		fp_in = open(fastq_path, 'r');
 	except IOError:
-		print 'ERROR: Could not open file "%s" for reading!' % fastq_path;
+		sys.stderr.write('ERROR: Could not open file "%s" for reading!\n' % fastq_path)
 		return;
 	
 	all_read_lengths = [];
@@ -256,7 +257,7 @@ def get_headers_and_lengths(fastq_path):
 	try:
 		fp_in = open(fastq_path, 'r');
 	except IOError:
-		print 'ERROR: Could not open file "%s" for reading!' % fastq_path;
+		sys.stderr.write('ERROR: Could not open file "%s" for reading!\n' % fastq_path)
 		exit(1);
 	seq_id = 0;
 	while True:
