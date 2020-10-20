@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 # Copyright Ivan Sovic, 2015. www.sovic.org
 #
@@ -247,7 +247,7 @@ def base_quality_stats(input_fastq_path):
     fp_in.close();
 
 def base_quality_filter(input_fastq_path, lte_gte, qv_threshold, out_fastq_path, fp_out):
-    print 'lte_gte = "%s"' % (lte_gte);
+    print('lte_gte = "%s"' % (lte_gte))
 
     try:
         fp_in = open(input_fastq_path, 'r');
@@ -573,7 +573,7 @@ def count_1d2d(input_fastq_path):
         sys.stdout.write('num_1d = %d (%.2f%%)\n' % (num_1d, (float(num_1d) / float(num_reads) * 100.0)));
         sys.stdout.write('num_2d = %d (%.2f%%)\n' % (num_2d, (float(num_2d) / float(num_reads) * 100.0)));
         sys.stdout.write('num_reads = %d\n' % (num_reads));
-    except Exception, e:
+    except Exception as e:
         sys.stderr.write(str(e));
         pass;
 
@@ -796,7 +796,9 @@ def separate_seqs(input_fastq_file, out_folder, headers_as_fn=False):
         if (headers_as_fn == False):
             fp = open('%s/%d.fast%c' % (out_folder, (i+1), input_fastq_file[-1]), 'w');
         else:
-            fp = open('%s/%s.fast%c' % (out_folder, headers[i].split()[0], input_fastq_file[-1]), 'w');
+            fname = headers[i].split()[0].replace('|', '_');
+            fname = fname.replace('/', '-');
+            fp = open('%s/%s.fast%c' % (out_folder, fname, input_fastq_file[-1]), 'w');
         # fp = open('%s/%d' % (out_folder, (i+1)), 'w');
         if (len(quals[i]) == 0):
             fp.write('>%s\n%s\n' % (headers[i], seqs[i]));
@@ -937,7 +939,7 @@ if __name__ == "__main__":
                 exit(0);
             try:
                 fp_out = open(out_fastq_path, 'w');
-            except Exception, e:
+            except Exception as e:
                 sys.stderr.write(str(e));
                 exit(0);
 
@@ -966,7 +968,7 @@ if __name__ == "__main__":
                 exit(0);
             try:
                 fp_out = open(out_fastq_path, 'w');
-            except Exception, e:
+            except Exception as e:
                 sys.stderr.write(str(e));
                 exit(0);
 
@@ -995,7 +997,7 @@ if __name__ == "__main__":
                 exit(0);
             try:
                 fp_out = open(out_fastq_path, 'w');
-            except Exception, e:
+            except Exception as e:
                 sys.stderr.write(e);
                 exit(0);
 
@@ -1025,7 +1027,7 @@ if __name__ == "__main__":
                 exit(0);
             try:
                 fp_out = open(out_fastq_path, 'w');
-            except Exception, e:
+            except Exception as e:
                 sys.stderr.write(e);
                 exit(0);
 
@@ -1055,7 +1057,7 @@ if __name__ == "__main__":
                 exit(0);
             try:
                 fp_out = open(out_fastq_path, 'w');
-            except Exception, e:
+            except Exception as e:
                 sys.stderr.write(e);
                 exit(0);
 
@@ -1126,7 +1128,7 @@ if __name__ == "__main__":
                 exit(0);
             try:
                 fp_out = open(out_fastq_path, 'w');
-            except Exception, e:
+            except Exception as e:
                 sys.stderr.write(str(e));
                 exit(0);
 
@@ -1155,7 +1157,7 @@ if __name__ == "__main__":
                 exit(0);
             try:
                 fp_out = open(out_fastq_path, 'w');
-            except Exception, e:
+            except Exception as e:
                 sys.stderr.write(str(e));
                 exit(0);
 
@@ -1185,7 +1187,7 @@ if __name__ == "__main__":
                 exit(0);
             try:
                 fp_out = open(out_fastq_path, 'w');
-            except Exception, e:
+            except Exception as e:
                 sys.stderr.write(str(e));
                 exit(0);
 
@@ -1214,7 +1216,7 @@ if __name__ == "__main__":
                 exit(0);
             try:
                 fp_out = open(out_fastq_path, 'w');
-            except Exception, e:
+            except Exception as e:
                 sys.stderr.write(str(e));
                 exit(0);
 
@@ -1243,7 +1245,7 @@ if __name__ == "__main__":
                 exit(0);
             try:
                 fp_out = open(out_fastq_path, 'w');
-            except Exception, e:
+            except Exception as e:
                 sys.stderr.write(str(e));
                 exit(0);
 
@@ -1272,7 +1274,7 @@ if __name__ == "__main__":
                 exit(0);
             try:
                 fp_out = open(out_fastq_path, 'w');
-            except Exception, e:
+            except Exception as e:
                 sys.stderr.write(str(e));
                 exit(0);
 
@@ -1301,7 +1303,7 @@ if __name__ == "__main__":
                 exit(0);
             try:
                 fp_out = open(out_fastq_path, 'w');
-            except Exception, e:
+            except Exception as e:
                 sys.stderr.write(str(e));
                 exit(0);
 
@@ -1339,7 +1341,7 @@ if __name__ == "__main__":
                 exit(0);
             try:
                 fp_out = open(out_fastq_path, 'w');
-            except Exception, e:
+            except Exception as e:
                 sys.stderr.write(str(e));
                 exit(0);
 
@@ -1408,7 +1410,7 @@ if __name__ == "__main__":
             exit(0);
 
         input_fastq_path = sys.argv[2]
-        desired_coverage = int(sys.argv[3])
+        desired_coverage = float(sys.argv[3])
         ref_genome_size = int(sys.argv[4])
 
         subsample(input_fastq_path, desired_coverage, ref_genome_size)
@@ -1513,7 +1515,7 @@ if __name__ == "__main__":
                 exit(0);
             try:
                 fp_out = open(out_fastq_path, 'w');
-            except Exception, e:
+            except Exception as e:
                 sys.stderr.write(str(e));
                 exit(0);
 
@@ -1546,7 +1548,7 @@ if __name__ == "__main__":
                 exit(0);
             try:
                 fp_out = open(out_fastq_path, 'w');
-            except Exception, e:
+            except Exception as e:
                 sys.stderr.write(str(e));
                 exit(0);
 
@@ -1577,7 +1579,7 @@ if __name__ == "__main__":
                 exit(0);
             try:
                 fp_out = open(out_fastq_path, 'w');
-            except Exception, e:
+            except Exception as e:
                 sys.stderr.write(str(e));
                 exit(0);
 
@@ -1606,7 +1608,7 @@ if __name__ == "__main__":
                 exit(0);
             try:
                 fp_out = open(out_fastq_path, 'w');
-            except Exception, e:
+            except Exception as e:
                 sys.stderr.write(str(e));
                 exit(0);
 
@@ -1629,9 +1631,8 @@ if __name__ == "__main__":
         input_fastq_path = sys.argv[2];
         out_folder = sys.argv[3];
         headers_as_fn = False;
-	if (len(sys.argv) >= 5):
-            headers_as_fn = True if (sys.argv[4].lower() in ['true', '1']) else False;
-
+    if (len(sys.argv) >= 5):
+        headers_as_fn = True if (sys.argv[4].lower() in ['true', '1']) else False;
         separate_seqs(input_fastq_path, out_folder, headers_as_fn=headers_as_fn);
 
     elif (sys.argv[1] == '2pacbio'):
@@ -1652,7 +1653,7 @@ if __name__ == "__main__":
                 exit(0);
             try:
                 fp_out = open(out_fastq_path, 'w');
-            except Exception, e:
+            except Exception as e:
                 sys.stderr.write(str(e));
                 exit(0);
         fp_out.close();
@@ -1684,7 +1685,7 @@ if __name__ == "__main__":
                 exit(0);
             try:
                 fp_out = open(out_fastq_path, 'w');
-            except Exception, e:
+            except Exception as e:
                 sys.stderr.write(str(e));
                 exit(0);
 
